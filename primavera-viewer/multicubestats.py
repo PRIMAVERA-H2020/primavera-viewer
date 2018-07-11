@@ -37,7 +37,7 @@ def locate_area_cubes(area_bounds, cubes):
         all_cubes_list.append(cube)
     return all_cubes_list
 
-def multi_experiment_mean(cubes):
+def all_experiments_mean(cubes):
     """
     Purpose: Calculates the multi-model/multi-ensemble mean for each time point for a given variable.
     :param cubes: iris.cube.CubeList
@@ -51,6 +51,7 @@ def multi_experiment_mean(cubes):
         all_cubes_list.append(cube)
     cubes = all_cubes_list
     merged_cube = cubes.merge_cube()
-    experiment_mean = merged_cube.collapsed('experiment_label', iris.analysis.MEAN)
+    experiments_mean = merged_cube.collapsed('experiment_label', iris.analysis.MEAN)
 
-    return experiment_mean
+    return experiments_mean
+

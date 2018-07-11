@@ -79,7 +79,8 @@ def change_calendar(cube):
     """
     cube = convert_365day_to_360day(cube)
     cube.remove_coord('time')
-    new_points = np.arange(0, 10800, 1)   # requires adaptation to count number of points rather than input
+    npoints = len(cube.coord('year').points)
+    new_points = np.arange(0, npoints, 1)   # requires adaptation to count number of points rather than input
     time_coord = iris.coords.DimCoord(new_points, standard_name='time',
                                           units=Unit('days since 1950-01-01 00:00:00', calendar='360_day'))
     cube.add_dim_coord(time_coord, 0)

@@ -27,19 +27,17 @@ def longitudinal_mean(cube):
     return cube
 
 def annual_mean(cube):
+    annual_mean_cube_list = iris.cube.CubeList([])
     annual_mean_cube = cube.aggregated_by('year', iris.analysis.MEAN)
     annual_mean_cube.rename(annual_mean_cube.name() + '_annual_mean')
-    return annual_mean_cube
-
-def annual_mean_max(cube):
+    annual_mean_cube_list.append(annual_mean_cube)
     annual_max = cube.aggregated_by('year', iris.analysis.MAX)
     annual_max.rename(annual_max.name() + '_annual_max')
-    return annual_max
-
-def annual_mean_min(cube):
+    annual_mean_cube_list.append(annual_max)
     annual_min = cube.aggregated_by('year', iris.analysis.MIN)
-    annual_min.rename(annual_min.name() + '_annual_max')
-    return annual_min
+    annual_min.rename(annual_min.name() + '_annual_min')
+    annual_mean_cube_list.append(annual_min)
+    return annual_mean_cube_list
 
 def monthly_mean(cube):
     monthly_mean_cube = cube.aggregated_by('month', iris.analysis.MEAN)

@@ -23,8 +23,8 @@ class Experiments:
         self.ensembles = ens
         self.versions = ver
 
-    def set_variables(self, var):
-        self.variables = var
+    def set_variables(self, ver):
+        self.variables = ver
 
     def set_models(self, mod):
         self.models = mod

@@ -3,11 +3,20 @@ Philip Rutter 10/07/18
 Module for single cube statistical methods such as annual/monthly/seasonal/zonal means
 """
 
+import formatcubemodule as format
 import iris
 import iris.coord_categorisation as icc
 import numpy as np
 
-
+def change_cube_format(cube):
+    cube = format.change_calendar(cube)
+    cube = format.add_extra_coords(cube)
+    cube = format.unify_data_type(cube)
+    cube = format.set_blank_attributes(cube)
+    cube = format.change_time_points(cube, hr=12)
+    cube.remove_coord('day_of_month')
+    cube.remove_coord('height')
+    return cube
 
 def latitudinal_mean(cube):
     cube = cube.collapsed('latitude', iris.analysis.MEAN)

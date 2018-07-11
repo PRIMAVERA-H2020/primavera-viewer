@@ -68,7 +68,7 @@ def convert_365day_to_360day(cube):
     doy_365_to_360_con = iris.Constraint(time=doy_365_to_360)
     return cube.extract(doy_365_to_360_con)
 
-def change_calendar(cubes):
+def change_calendar(cube):
     """
     Purpose: Converts a list of cubes with varying calendars (gregorian, 365_day, 360_day) to 360 day calendars
     by removing extra dates and replacing time axis with new points defined from the start of 1950. This allows a
@@ -77,17 +77,13 @@ def change_calendar(cubes):
     :return: cube list with all cubes defined with the same units and a 360 day calendar
     Currently set up to run for 10 years from 1950, will adapt for input dates
     """
-
-    cube_list = iris.cube.CubeList([])
-    for cube in cubes:
-        cube = convert_365day_to_360day(cube)
-        cube.remove_coord('time')
-        new_points = np.arange(0, 10800, 1)   # requires adaptation to count number of points rather than input
-        time_coord = iris.coords.DimCoord(new_points, standard_name='time',
+    cube = convert_365day_to_360day(cube)
+    cube.remove_coord('time')
+    new_points = np.arange(0, 10800, 1)   # requires adaptation to count number of points rather than input
+    time_coord = iris.coords.DimCoord(new_points, standard_name='time',
                                           units=Unit('days since 1950-01-01 00:00:00', calendar='360_day'))
-        cube.add_dim_coord(time_coord, 0)
-        cube_list.append(cube)
-    return cube_list
+    cube.add_dim_coord(time_coord, 0)
+    return cube
 
 def change_time_units(cube):
     """

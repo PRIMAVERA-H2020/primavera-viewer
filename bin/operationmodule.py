@@ -66,7 +66,7 @@ colours = ['r', 'b', 'g']
 for n in ncubes:
     # collapse cubes over latitude longitude and ensemble
     cube = experiment_list[n]
-    cube = format.add_extra_coords(cube)
+    cube = scs.change_cube_format(cube)
     annual_mean_cube = scs.annual_mean(cube)
     annual_max = scs.annual_mean_max(cube)
     annual_min = scs.annual_mean_min(cube)

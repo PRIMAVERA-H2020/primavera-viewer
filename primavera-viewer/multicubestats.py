@@ -5,7 +5,7 @@ Module for handling cube list statistics
 
 import iris
 import nearestknownpoint as nkp
-import formatcubemodule as format
+import singlecubestats as scs
 
 
 def locate_point_cubes(point, cubes):
@@ -45,18 +45,10 @@ def multi_experiment_mean(cubes):
     Note: All calendars are converted to a 360 day calendar by this script. Gregorian and 365 day calendars keep
     31/01 and 31/03 to balance 28/02. All other 31st days and leap days are removed.
     """
-    print('starting annual mean')
-    cubes = format.change_calendar(cubes)
     all_cubes_list = iris.cube.CubeList([])
     for cube in cubes:
-        cube = format.add_extra_coords(cube)
-        cube = format.unify_data_type(cube)
-        cube = format.set_blank_attributes(cube)
-        cube = format.change_time_points(cube, hr=12)
-        cube.remove_coord('day_of_month')
-        cube.remove_coord('height')
+        cube = scs.change_cube_format(cube)
         all_cubes_list.append(cube)
-
     cubes = all_cubes_list
     merged_cube = cubes.merge_cube()
     experiment_mean = merged_cube.collapsed('experiment_label', iris.analysis.MEAN)

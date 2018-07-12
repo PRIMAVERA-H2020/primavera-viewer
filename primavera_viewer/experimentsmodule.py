@@ -69,7 +69,7 @@ class ExpPlotting:
     def plot_all(self):
         ncubes = np.arange(0, len(self.experiments_list), 1)
         colours = ['r', 'b', 'g', 'c', 'm', 'y']
-        if self.plot_type == 'annual mean timeseries':
+        if self.plot_type == 'annual_mean_timeseries':
             for n in ncubes:
                 cube = self.experiments_list[n]
                 cube = scs.change_cube_format(cube)

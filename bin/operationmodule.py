@@ -21,49 +21,74 @@ max/min data for annual timeseries.
 
 REQUIRES: adaptation to command line operation of input variables
 
+Model_input options: ['MOHC/HadGEM3-GC31-LM', 'CMCC/CMCC-CM2-HR4', 'EC-Earth-Consortium/EC-Earth3', 'ECMWF/ECMWF-IFS-LR']
+Ensemble input options: ['r1i1p1f1', 'r1i2p1f1', 'r1i3p1f1']
+Variable input options: ['tasmin', 'tasmax']
+Version input options: ['gn/v20180605', 'gn/v20170808', 'gn/v20170831', 'gn/v20170706', 'gr/v20170911', 'gr/v20170915']
 
 
 """
-import getdatamodule as dm
-import experimentsmodule as expm
+from primavera_viewer.getdatamodule import *
+from primavera_viewer.experimentsmodule import *
+import argparse
 
 
+def parse_args():
+    """
+    Parse command-line arguments
+    """
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-var', '--variables', nargs='+', help='input variables to compare')
+    parser.add_argument('-mod', '--models', nargs='+', help='input models to compare')
+    parser.add_argument('-ens', '--ensembles', nargs='+', help='input ensemble members to compare')
+    parser.add_argument('-ver', '--versions', nargs='+', help='input version numbers')
+    parser.add_argument('-plt', '--plot_type', help='input plot type for data analysis')
+    parser.add_argument('-syr', '--start_year', help='input start year for comparison', type=int)
+    parser.add_argument('-eyr', '--end_year', help='input end year for comparison', type=int)
+    parser.add_argument('-lat', '--latitude', help='input latitude location for comparison', type=int)
+    parser.add_argument('-lon', '--longitude', help='input longuitude location for comparison', type=int)
 
-# model_inputs = ['MOHC/HadGEM3-GC31-LM', 'CMCC/CMCC-CM2-HR4', 'EC-Earth-Consortium/EC-Earth3', 'ECMWF/ECMWF-IFS-LR']
-# ensemble_inputs = ['r1i1p1f1', 'r1i2p1f1', 'r1i3p1f1']
-# variable_inputs = ['tasmin', 'tasmax']
-# resolution_inputs = ['gn/v20180605', 'gn/v20170808', 'gn/v20170831', 'gn/v20170706', 'gr/v20170911', 'gr/v20170915']
+    args = parser.parse_args()
 
-time_constraints = [1970,1980]  # input start/end year
-location_point = [60,30]    # define point location
+    return args
 
-# |----- Option for constrained loading instead of post load subsetting -----|
-# lat_constraints = [60, 60]  # define latitude bounds
-# lon_constraints = [30, 30]  # define longitude bounds
-choose_constraints = [time_constraints]     #, lat_constraints, lon_constraints]
-choose_variables = ['tasmax']      # variable input
-compare_models = ['MOHC/HadGEM3-GC31-LM', 'CMCC/CMCC-CM2-HR4']       # models input
-compare_ensembles = ['r1i1p1f1','r1i2p1f1']    # ensembles input
-compare_resolutions = ['gn/v20180605', 'gn/v20170706']     # version input
-choose_plot_type = 'annual mean timeseries'
+def main(args):
+    """
+    Run comparison of models/ensembles and plot data
+    """
 
-# Create class containing all the variables to be compared for each experiment
-experiment_inputs = dm.Experiments(choose_variables, compare_models, compare_ensembles,  compare_resolutions)
+    time_constraints = [args.start_year, args.end_year]  # input start/end year
+    location_point = [args.latitude, args.longitude]    # define point location
 
-# Load with constraints and choose to concatenate all the required files
-experiments_list = experiment_inputs.load_all_data('concatenate', choose_constraints)
+    # |----- Option for constrained loading instead of post load subsetting -----|
+    # lat_constraints = [60, 60]  # define latitude bounds
+    # lon_constraints = [30, 30]  # define longitude bounds
+    choose_constraints = [time_constraints]     #, lat_constraints, lon_constraints]
 
-# Create class containing experiment list and required location
-cubes = expm.ExpStatistics(experiments_list, loc=location_point)
+    # Create class containing all the variables to be compared for each experiment
+    experiment_inputs = Experiments(args.variables, args.models, args.ensembles, args.versions)
 
-# Subset all cubes with requested location
-experiments_data = cubes.constrain_location()
+    # Load with constraints and choose to concatenate all the required files
+    experiments_list = experiment_inputs.load_all_data('concatenate', choose_constraints)
 
-# Merge multi-model/ensemble cubes and produce a mean for each time point
-experiments_mean = expm.ExpStatistics(experiments_data, loc=location_point).all_experiments_mean()
+    # Create class containing experiment list and required location
+    cubes = ExpStatistics(experiments_list, loc=location_point)
 
-# Create class containing data from all experiments, the experiment mean timeseries and the requested plot type
-result = expm.ExpPlotting(experiments_data, experiments_mean, choose_plot_type)
+    # Subset all cubes with requested location
+    experiments_data = cubes.constrain_location()
 
-# Plot the data as requested
-result.plot_all()
+    # Merge multi-model/ensemble cubes and produce a mean for each time point
+    experiments_mean = ExpStatistics(experiments_data, loc=location_point).all_experiments_mean()
+
+    # Create class containing data from all experiments, the experiment mean timeseries and the requested plot type
+    result = ExpPlotting(experiments_data, experiments_mean, args.plot_type)
+
+    # Plot the data as requested
+    result.plot_all()
+
+if __name__ == '__main__':
+
+    args = parse_args()
+
+    # run the code
+    main(args)

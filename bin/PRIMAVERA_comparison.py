@@ -28,8 +28,8 @@ Version input options: ['gn/v20180605', 'gn/v20170808', 'gn/v20170831', 'gn/v201
 
 
 """
-from primavera_viewer.getdatamodule import *
-from primavera_viewer.experimentsmodule import *
+from primavera_viewer.get_PRIMAVERA_data import *
+from primavera_viewer.experiments_data import *
 import argparse
 
 
@@ -90,5 +90,5 @@ if __name__ == '__main__':
 
     args = parse_args()
 
-    # run the code
+    # Run the code
     main(args)

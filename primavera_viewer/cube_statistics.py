@@ -6,7 +6,7 @@ Module for single cube statistical methods such as annual/monthly/seasonal/zonal
 import iris
 import iris.coord_categorisation as icc
 import numpy as np
-from primavera_viewer import formatcubemodule as format
+from primavera_viewer import format_cube as format
 
 def change_cube_format(cube):
     cube = format.change_calendar(cube)
@@ -68,3 +68,6 @@ def seasonal_mean(cube, season=''):
         season_mean_cube.append(allseason_mean_cube[s])
     season_cube = season_mean_cube.merge_cube()
     return season_cube
+
+def experiment_mean_anomaly(cube, experiment_mean):
+    anomaly = cube - experiment_mean

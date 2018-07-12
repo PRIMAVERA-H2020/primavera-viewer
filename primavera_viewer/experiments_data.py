@@ -10,7 +10,7 @@ import iris
 import numpy as np
 import iris.quickplot as qplt
 import matplotlib.pyplot as plt
-from primavera_viewer import (singlecubestats as scs, nearestknownpoint as nkp)
+from primavera_viewer import (cube_statistics as cs, nearest_location as nl)
 
 class ExpStatistics:
 
@@ -23,20 +23,20 @@ class ExpStatistics:
         Purpose: Subsets cube location to set point in the coordinate system (CS). If self.location is a 2D array
         of latitude and longitude points a PointLocation class is created and the nearest known point in the CS is
         found. If self.location is a 4D array of min/max latitude and longitude points an AreaLocation class is created
-        finding all nearest known points in the defined area and producing a zonal mean.
+        finding all nearest known points in the defined area and returning a zonal mean.
         :return: list of cubes at the requested point
         """
         if len(self.location) == 2:
             all_cubes_list = iris.cube.CubeList([])
             for cube in self.experiments_list:
-                cube = nkp.PointLocation(self.location, cube)
+                cube = nl.PointLocation(self.location, cube)
                 cube = cube.find_point()
                 all_cubes_list.append(cube)
             return all_cubes_list
         if len(self.location) == 4:
             all_cubes_list = iris.cube.CubeList([])
             for cube in self.experiments_list:
-                cube = nkp.AreaLocation(self.location, cube)
+                cube = nl.AreaLocation(self.location, cube)
                 cube = cube.find_area()
                 all_cubes_list.append(cube)
             return all_cubes_list
@@ -50,7 +50,7 @@ class ExpStatistics:
         """
         all_cubes_list = iris.cube.CubeList([])
         for cube in self.experiments_list:
-            cube = scs.change_cube_format(cube)
+            cube = cs.change_cube_format(cube)
             all_cubes_list.append(cube)
         cubes = all_cubes_list
         merged_cube = cubes.merge_cube()
@@ -61,24 +61,25 @@ class ExpStatistics:
 
 class ExpPlotting:
 
-    def __init__(self, exp_list=iris.cube.CubeList([]), exp_mean=iris.cube.Cube, plot=''):
+    def __init__(self, exp_list=iris.cube.CubeList, exp_mean=iris.cube.Cube, plot=''):
         self.experiments_list = exp_list
         self.experiments_mean = exp_mean
         self.plot_type = plot
 
     def plot_all(self):
-        ncubes = np.arange(0, len(self.experiments_list), 1)
         colours = ['r', 'b', 'g', 'c', 'm', 'y']
         if self.plot_type == 'annual_mean_timeseries':
-            for n in ncubes:
-                cube = self.experiments_list[n]
-                cube = scs.change_cube_format(cube)
-                cubes = scs.annual_mean(cube)
+            for i, cube in enumerate(self.experiments_list):
+                cube = cs.change_cube_format(cube)
+                cubes = cs.annual_mean(cube)
+                annual_mean = cubes[0]
+                annual_mean_max = cubes[1]
+                annual_mean_min = cubes[2]
                 cube_label = cubes[0].coord('experiment_label').points[0]
-                qplt.plot(cubes[0], label=cube_label, color=colours[n])
-                qplt.plot(cubes[1], linestyle='dashed', color=colours[n])
-                qplt.plot(cubes[2], linestyle='dashed', color=colours[n])
-            mean_cube = scs.annual_mean(self.experiments_mean)
+                qplt.plot(annual_mean, label=cube_label, color=colours[i])
+                qplt.plot(annual_mean_max, linestyle='dashed', color=colours[i])
+                qplt.plot(annual_mean_min, linestyle='dashed', color=colours[i])
+            mean_cube = cs.annual_mean(self.experiments_mean)
             qplt.plot(mean_cube[0], label='experiment_mean', linestyle='dashed', color='black')
         plt.legend()
         plt.grid(True)

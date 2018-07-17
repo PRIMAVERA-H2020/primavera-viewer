@@ -1,22 +1,52 @@
 """
 Philip Rutter 10/07/18
-Module for single cube statistical methods such as annual/monthly/seasonal/zonal means
+Module for single cube statistical methods such as annual/monthly/seasonal/area
+means
 """
 
 import iris
 import iris.coord_categorisation as icc
 import numpy as np
-from primavera_viewer import format_cube as format
+from primavera_viewer import cube_format as format
 
-def change_cube_format(cube):
-    cube = format.change_calendar(cube)
-    cube = format.add_extra_coords(cube)
-    cube = format.unify_data_type(cube)
-    cube = format.set_blank_attributes(cube)
-    cube = format.change_time_points(cube, hr=12)
-    cube.remove_coord('day_of_month')
-    cube.remove_coord('height')
-    return cube
+# def change_cube_format(cube):
+#     cube = format.remove_extra_coords(cube)
+#     cube = format.change_calendar(cube,
+#                                   new_units='days since 1950-01-01 00:00:00')
+#     cube = format.add_extra_coords(cube)
+#     cube = format.unify_data_type(cube)
+#     cube = format.set_blank_attributes(cube)
+#     cube = format.change_time_points(cube, hr=12)
+#     cube = format.change_time_bounds(cube)
+#     cube.remove_coord('day_of_month')
+#     cube.remove_coord('hour')
+#     return cube
+
+def all_experiments_mean(cubes):
+    """
+    Purpose: Calculates the multi-model/multi-ensemble mean for each time
+    point for a given variable.
+    :return: single cube containing multi-model/ensemble mean
+    Note: All calendars are converted to a 360 day calendar by this script.
+    Gregorian and 365 day calendars keep 31/01 and 31/03 to balance 28/02.
+    All other 31st days and leap days are removed.
+    """
+    all_cubes_list = iris.cube.CubeList([])
+    for cube in cubes:
+        try:
+            cube.remove_coord('latitude')
+        except:
+            pass
+        try:
+            cube.remove_coord('longitude')
+        except:
+            pass
+        all_cubes_list.append(cube)
+    cubes = all_cubes_list
+    merged_cube = cubes.merge_cube()
+    experiments_mean = merged_cube.collapsed('experiment_label',
+                                             iris.analysis.MEAN)
+    return experiments_mean
 
 def latitudinal_mean(cube):
     cube = cube.collapsed('latitude', iris.analysis.MEAN)
@@ -46,7 +76,8 @@ def monthly_mean(cube):
 def seasonal_mean(cube, season=''):
     icc.add_season(cube, 'time', 'clim_season')
     icc.add_season_year(cube, 'time', 'season_year')
-    allseason_mean_cube = cube.aggregated_by(['clim_season', 'season_year'], iris.analysis.MEAN)
+    allseason_mean_cube = cube.aggregated_by(['clim_season', 'season_year'],
+                                             iris.analysis.MEAN)
     season_mean_cube = iris.cube.CubeList([])
     if season == 'winter':
         st = 0
@@ -63,7 +94,8 @@ def seasonal_mean(cube, season=''):
     else:
         st = 0
         sep = 1
-    season_array = np.arange(st, len(allseason_mean_cube.coord('time').points), sep)
+    season_array = np.arange(st, len(allseason_mean_cube.coord('time').points),
+                             sep)
     for s in season_array:
         season_mean_cube.append(allseason_mean_cube[s])
     season_cube = season_mean_cube.merge_cube()

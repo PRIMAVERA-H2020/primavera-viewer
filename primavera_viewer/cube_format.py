@@ -52,15 +52,15 @@ def redefine_spatial_coords(cube):
         return cube
 
 
-
-
-
-
-def add_extra_coords(cube):
+def add_extra_time_coords(cube):
     """
     Adds new coordinate for indexing a given experiment based on model and
     ensemble and adds additional time coordinates for unit manipulation
     """
+    if not cube.coords('year'):
+        icc.add_year(cube, 'time')
+    if not cube.coords('month'):
+        icc.add_month(cube, 'time')
     if not cube.coords('month_number'):
         icc.add_month_number(cube, 'time')
     if not cube.coords('day_of_month'):
@@ -69,11 +69,15 @@ def add_extra_coords(cube):
         icc.add_hour(cube, 'time')
     return cube
 
-def remove_extra_coords(cube):
+def remove_extra_time_coords(cube):
     """
     Removes the coordinates defined above to revert cube back to its original
     coordinates
     """
+    try:
+        cube.remove_coord('year')
+    except:
+        pass
     try:
         cube.remove_coord('month_number')
     except:
@@ -184,6 +188,7 @@ def change_time_points(cube, yr=None, mn=None, dy=None, hr=None):
     :param hr: fixes all data points at defined hour
     :return: cube with time points fixed with constraints above
     """
+    cube = add_extra_time_coords(cube)
     new_points = cube.coord('time').units.num2date(cube.coord('time').points)
     years = cube.coord('year').points
     months = cube.coord('month_number').points
@@ -204,6 +209,7 @@ def change_time_points(cube, yr=None, mn=None, dy=None, hr=None):
                                             hour=hour))
     cube.coord('time').points = cube.coord('time').units\
         .date2num(dates_converted)
+    cube = remove_extra_time_coords(cube)
     return cube
 
 def change_time_bounds(cube):

@@ -54,10 +54,8 @@ class PointLocation:
     def find_point(self):
         lat_point = self.latitude    # define chosen latitude point from input
         lon_point = self.longitude   # define chosen longitude point from input
-        print(self.cube)
         self.rename_latitude()
         self.rename_longitude()
-        print(self.cube)
         all_lat_bounds = self.cube.coord('latitude').bounds
         all_lon_bounds = self.cube.coord('longitude').bounds
         for i, lat in enumerate(all_lat_bounds):

@@ -8,10 +8,9 @@ experiments as well as plotting functions to be used in the operation module.
 
 import iris
 import numpy as np
-import iris.quickplot as qplt
-import matplotlib.pyplot as plt
-from primavera_viewer import (cube_statistics as stats, nearest_location as loc,
-                              cube_format as format)
+from primavera_viewer import (nearest_location as loc, cube_format as format,
+                              cube_plotting as cplot)
+
 
 class ExperimentsData:
     """
@@ -130,12 +129,12 @@ class ExperimentsData:
             cube = format.change_calendar(cube,
                                           new_units='days since 1950-01-01 '
                                                     '00:00:00')
-            cube = format.add_extra_coords(cube)
+            cube = format.add_extra_time_coords(cube)
             cube = format.unify_data_type(cube)
             cube = format.set_blank_attributes(cube)
             cube = format.change_time_points(cube, hr=12)
             cube = format.change_time_bounds(cube)
-            cube = format.remove_extra_coords(cube) # remove non-essential coord
+            cube = format.remove_extra_time_coords(cube) # remove non-essential coord
             all_cubes_list.append(cube)
         self.experiments_list = all_cubes_list
         return self
@@ -150,20 +149,17 @@ class ExperimentsPlot:
         self.plot_type = plot
 
     def plot_all(self):
-        colours = ['r', 'b', 'g', 'c', 'm', 'y']
-        text = ''
+        print('Starting plotting')
         if self.plot_type == 'annual_mean_timeseries':
-            for i, cube in enumerate(self.experiments_list):
-                cubes = stats.annual_mean(cube)
-                annual_mean = cubes[0]
-                annual_mean_max = cubes[1]
-                annual_mean_min = cubes[2]
-                cube_label = cubes[0].coord('experiment_label').points[0]
-                qplt.plot(annual_mean, label=cube_label, color=colours[i])
-                qplt.plot(annual_mean_max, linestyle='dashed', color=colours[i])
-                qplt.plot(annual_mean_min, linestyle='dashed', color=colours[i])
-            mean_cube = stats.annual_mean(self.experiments_mean)
-            qplt.plot(mean_cube[0], label='experiment_mean', color='black')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
+            plot = cplot.annual_mean_timeseries(self.experiments_list,
+                                                self.experiments_mean)
+        if self.plot_type == 'experiments_mean_anomaly':
+            plot = cplot.experiments_mean_anomaly(self.experiments_list,
+                                                  self.experiments_mean)
+        if self.plot_type == 'seasonal_mean_timeseries':
+            plot = cplot.seasonal_mean_timeseries(self.experiments_list,
+                                                  self.experiments_mean)
+        if self.plot_type == 'monthly_anomaly_timeseries':
+            plot = cplot.monthly_anomaly_timeseries(self.experiments_list)#,
+                                                  #self.experiments_mean)
+        return plot

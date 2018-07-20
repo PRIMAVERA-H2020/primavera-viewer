@@ -48,13 +48,16 @@ def all_experiments_mean(cubes):
                                              iris.analysis.MEAN)
     return experiments_mean
 
+
 def latitudinal_mean(cube):
     cube = cube.collapsed('latitude', iris.analysis.MEAN)
     return cube
 
+
 def longitudinal_mean(cube):
     cube = cube.collapsed('longitude', iris.analysis.MEAN)
     return cube
+
 
 def annual_mean(cube):
     annual_mean_cube_list = iris.cube.CubeList([])
@@ -69,37 +72,88 @@ def annual_mean(cube):
     annual_mean_cube_list.append(annual_min)
     return annual_mean_cube_list
 
-def monthly_mean(cube):
-    monthly_mean_cube = cube.aggregated_by('month', iris.analysis.MEAN)
-    return monthly_mean_cube
 
-def seasonal_mean(cube, season=''):
+def monthly_mean(cube):
+    monthly_mean_cube = cube.aggregated_by(['month','year'], iris.analysis.MEAN)
+    monthly_max_cube = cube.aggregated_by(['month','year'], iris.analysis.MAX)
+    monthly_min_cube = cube.aggregated_by(['month','year'], iris.analysis.MIN)
+    return [monthly_mean_cube, monthly_max_cube, monthly_min_cube]
+
+
+def monthly_anomaly(cube):
+    cube = format.add_extra_time_coords(cube)
+    monthly_mean_anomaly_list = iris.cube.CubeList([])
+    monthly_max_anomaly_list = iris.cube.CubeList([])
+    monthly_min_anomaly_list = iris.cube.CubeList([])
+    all_months_mean = cube.aggregated_by(['month'], iris.analysis.MEAN)
+    monthly_cubes = monthly_mean(cube)
+    monthly_mean_cube = monthly_cubes[0]
+    monthly_max_cube = monthly_cubes[1]
+    monthly_min_cube = monthly_cubes[2]
+    for mon in np.arange(1,13,1):
+        cube_mean = monthly_mean_cube.extract(
+            iris.Constraint(month_number=mon))
+        cube_max = monthly_max_cube.extract(
+            iris.Constraint(month_number=mon))
+        cube_min = monthly_min_cube.extract(
+            iris.Constraint(month_number=mon))
+        all_month_mean = all_months_mean.extract(
+            iris.Constraint(month_number=mon))
+        cube_mean_anomaly = cube_mean - all_month_mean
+        cube_max_anomaly = cube_max - all_month_mean
+        cube_min_anomaly = cube_min - all_month_mean
+        cube_mean_anomaly.rename(cube_mean.name() + '_monthly_mean_anomaly')
+        cube_max_anomaly.rename(cube_max.name() + '_monthly_mean_anomaly')
+        cube_min_anomaly.rename(cube_min.name() + '_monthly_mean_anomaly')
+        for i, point in enumerate(cube_mean_anomaly.coord('time')):
+            cube = cube_mean_anomaly[i]
+            cube = format.remove_extra_time_coords(cube)
+            monthly_mean_anomaly_list.append(cube)
+        for i, point in enumerate(cube_max_anomaly.coord('time')):
+            cube = cube_max_anomaly[i]
+            cube = format.remove_extra_time_coords(cube)
+            monthly_max_anomaly_list.append(cube)
+        for i, point in enumerate(cube_min_anomaly.coord('time')):
+            cube = cube_min_anomaly[i]
+            cube = format.remove_extra_time_coords(cube)
+            monthly_min_anomaly_list.append(cube)
+
+    anomaly_mean = monthly_mean_anomaly_list.merge_cube()
+    anomaly_mean = format.change_time_points(anomaly_mean, dy=1, hr = 00)
+    anomaly_max = monthly_max_anomaly_list.merge_cube()
+    anomaly_max = format.change_time_points(anomaly_max, dy=1, hr = 00)
+    anomaly_min = monthly_min_anomaly_list.merge_cube()
+    anomaly_min = format.change_time_points(anomaly_min, dy=1, hr = 00)
+    return [anomaly_mean, anomaly_max, anomaly_min]
+
+
+def seasonal_mean(cube):
+    seasons = ['winter','summer']
     icc.add_season(cube, 'time', 'clim_season')
     icc.add_season_year(cube, 'time', 'season_year')
-    allseason_mean_cube = cube.aggregated_by(['clim_season', 'season_year'],
-                                             iris.analysis.MEAN)
-    season_mean_cube = iris.cube.CubeList([])
-    if season == 'winter':
-        st = 0
-        sep = 4
-    elif season == 'spring':
-        st = 1
-        sep = 4
-    elif season == 'summer':
-        st = 2
-        sep = 4
-    elif season == 'autumn':
-        st = 3
-        sep = 4
-    else:
-        st = 0
-        sep = 1
-    season_array = np.arange(st, len(allseason_mean_cube.coord('time').points),
-                             sep)
-    for s in season_array:
-        season_mean_cube.append(allseason_mean_cube[s])
-    season_cube = season_mean_cube.merge_cube()
-    return season_cube
-
-def experiment_mean_anomaly(cube, experiment_mean):
-    anomaly = cube - experiment_mean
+    season_mean_cube_list = iris.cube.CubeList([])
+    season_max_cube_list = iris.cube.CubeList([])
+    season_min_cube_list = iris.cube.CubeList([])
+    for season in seasons:
+        if season == 'winter':
+            months = 'djf'
+        if season == 'spring':
+            months = 'mam'
+        if season == 'summer':
+            months = 'jja'
+        if season == 'autumn':
+            months = 'son'
+        single_season_cube = cube.extract(iris.Constraint(clim_season=months))
+        season_mean_cube = single_season_cube.aggregated_by(
+            ['clim_season', 'season_year'], iris.analysis.MEAN)
+        season_mean_cube.rename(season_mean_cube.name() + '_'+season+'_mean')
+        season_mean_cube_list.append(season_mean_cube)
+        season_max = single_season_cube.aggregated_by(
+            ['clim_season', 'season_year'], iris.analysis.MAX)
+        season_max.rename(season_max.name() + '_'+season+'_max')
+        season_max_cube_list.append(season_max)
+        season_min = single_season_cube.aggregated_by(
+            ['clim_season', 'season_year'], iris.analysis.MIN)
+        season_min.rename(season_min.name() + '_'+season+'_min')
+        season_min_cube_list.append(season_min)
+    return [season_mean_cube_list,season_max_cube_list,season_min_cube_list]

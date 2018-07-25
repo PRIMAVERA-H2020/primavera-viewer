@@ -15,7 +15,7 @@ from primavera_viewer.exp_format import (add_experiment_label,
                                          change_time_units)
 
 print('get json')
-FILENAME = '../app_config.json'
+FILENAME = 'app_config.json'
 # Read the config file in
 with open(FILENAME) as fh:
     app_config = json.load(fh)

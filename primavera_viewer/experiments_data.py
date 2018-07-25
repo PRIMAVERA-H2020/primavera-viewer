@@ -1,23 +1,25 @@
 """
 Philip Rutter 11/07/18
 
-Module defines classes for subsetting and averaging multi-model/ensemble
-experiments as well as plotting functions to be used in the operation module.
-
+Module defines a class 'ExperimentsData' used to manipulating and handling data
+from experiments once fully loaded and concatenated.
 """
 from multiprocessing import Process, Manager
 import itertools
 import iris
 import numpy as np
-from primavera_viewer import (nearest_location as loc, cube_format as format,
-                              cube_plotting as cplot)
+from primavera_viewer import (nearest_location as loc, cube_format as format)
 
 
 class ExperimentsData:
     """
     Class containing all experiment data and the requested location. Methods
     within class are used to manipulate spatial coordinates, time dimensions
-    and cube formatting in order to accurately plot and compare experiments
+    and cube formatting in order to accurately plot and compare experiments.
+
+    Note: All calendars are converted to a 360 day calendar by this script.
+    Gregorian and 365 day calendars keep 31/01 and 31/03 to balance 28/02.
+    All other 31st days and leap days are removed.
     """
     def __init__(self, exp_list=iris.cube.CubeList([]), loc=np.array([])):
         self.experiments_list = exp_list
@@ -63,7 +65,6 @@ class ExperimentsData:
         Ensure that all spatial dimensions are defined by the same coordinate
         system: two 1D arrays of latitude and longitude coordinates.
         Method for redefining spatial coordinates can be specific to each model.
-        :return: ExperimentData class with unified spatial coords
         """
         cube = params.get()
         cube = format.redefine_spatial_coords(cube)
@@ -71,13 +72,12 @@ class ExperimentsData:
 
     def constrain_location(self, params, output):
         """
-        Purpose: Subsets cube location to set point in the coordinate system
-        (CS). If self.location is a 2D array of latitude and longitude points a
+        Subsets cube location to single point in the coordinate system (CS). If
+        self.location is a 2D array of latitude and longitude points a
         PointLocation class is created and the nearest known point in the CS is
         found. If self.location is a 4D array of min/max latitude and longitude
         points an AreaLocation class is created finding all nearest known points
         in the defined area and returning an area mean.
-        :return: list of cubes at the requested point
         """
         cube = params.get()
         if len(self.location) == 2:
@@ -103,14 +103,14 @@ class ExperimentsData:
             cube = cube.find_area()
             output.append(cube)
 
-
     def unify_cube_format(self, params, output):
         """
         Ensure that all experiments have the same cube format i.e the same time
         coordinates and calendar, attributes, data type and auxillary coords.
         Time coordinate units and time point definitions can also be set.
-        Example: units are set to be unified as 'days since 1950-01-01 00:00:00'
-        and daily data is defined at the hour of midday.
+        Example: units are currently set to be unified as
+        'days since 1950-01-01 00:00:00' and daily data is defined at the hour
+        of midday.
         """
         cube=params.get()
         print('Unifying formatting')
@@ -120,12 +120,17 @@ class ExperimentsData:
         cube = format.add_extra_time_coords(cube)
         cube = format.unify_data_type(cube)
         cube = format.set_blank_attributes(cube)
-        cube = format.change_time_points(cube, hr=12)
+        cube = format.change_time_points(cube, hr=12) # daily data = midday
         cube = format.change_time_bounds(cube)
         cube = format.remove_extra_time_coords(cube)# remove non-essential coord
         output.append(cube)
 
-    def experiment_operations(self):
+
+    def experiments_operations(self):
+        """
+        Perform all the above operations in parallel for each experiemnt the
+        user wishes to compare.
+        """
 
         operations = [self.unify_spatial_coordinates, self.constrain_location,
                       self.unify_cube_format]
@@ -149,26 +154,26 @@ class ExperimentsData:
         return self
 
 
-class ExperimentsPlot:
-
-    def __init__(self, exp_list=iris.cube.CubeList,
-                 exp_mean=iris.cube.Cube, plot=''):
-        self.experiments_list = exp_list
-        self.experiments_mean = exp_mean
-        self.plot_type = plot
-
-    def plot_all(self):
-        print('Starting plotting')
-        if self.plot_type == 'annual_mean_timeseries':
-            plot = cplot.annual_mean_timeseries(self.experiments_list,
-                                                self.experiments_mean)
-        if self.plot_type == 'experiments_mean_anomaly':
-            plot = cplot.experiments_mean_anomaly(self.experiments_list,
-                                                  self.experiments_mean)
-        if self.plot_type == 'seasonal_mean_timeseries':
-            plot = cplot.seasonal_mean_timeseries(self.experiments_list,
-                                                  self.experiments_mean)
-        if self.plot_type == 'monthly_anomaly_timeseries':
-            plot = cplot.monthly_anomaly_timeseries(self.experiments_list)#,
-                                                  #self.experiments_mean)
-        return plot
+    def all_experiments_mean(self):
+        """
+        Calculates the multi-experiment mean from the cube list of fully unified
+        experiments data above.
+        """
+        print('Calculating mean')
+        all_cubes_list = iris.cube.CubeList([])
+        for cube in self.experiments_list:
+            try:
+                cube.remove_coord('latitude')
+            except:
+                pass
+            try:
+                cube.remove_coord('longitude')
+            except:
+                pass
+            all_cubes_list.append(cube)
+        cubes = all_cubes_list
+        merged_cube = cubes.merge_cube()
+        experiments_mean = merged_cube.collapsed('experiment_label',
+                                                 iris.analysis.MEAN)
+        experiments_mean.coord('experiment_label').points[0]='Experiments Mean'
+        return experiments_mean

@@ -223,7 +223,7 @@ def change_time_bounds(cube):
 
 def set_blank_attributes(cube):
     """
-    removes all the cube attributes that prevent cubes merging
+    Sets to blank all the cube attributes that prevent cubes merging
     """
     attributes = ['further_info_url', 'initialization_index', 'mo_runid',
                   'table_info', 'variant_label', 'CDO', 'parent_activity_id',

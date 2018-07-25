@@ -1,8 +1,8 @@
 """
-Philip Rutter 02/07/18
+Philip Rutter 25/07/18
 
-Module for constrained loading and concatenation of data from either a single
-ensemble member or multiple ensembles to be compared.
+Module for loading and concatenation of data from multiple models aand ensembles
+for a given variable.
 
 """
 from __future__ import print_function
@@ -11,10 +11,8 @@ from multiprocessing import Process, Manager
 import itertools
 import iris
 import numpy as np
-import iris.coord_categorisation as icc
 from primavera_viewer.cube_format import (add_experiment_label,
                                           change_time_units)
-
 
 print('get json')
 FILENAME = '../app_config.json'
@@ -24,12 +22,16 @@ with open(FILENAME) as fh:
 print('got json')
 
 
-class Experiments:
+class ExperimentsLoading:
     """
-    A class of experiments with data that can be loaded individually,
-    concatenated and combined into a cube list for
-    multiple models, ensembles and versions at varying resolutions for a single
-    variable.
+    A class of experiments defined by a model and an ensemble member at a given
+    resolution for a single variable. Data for each experiment can be loaded,
+    constrained in time and concatenated into a single cube to be held in a
+    output cube list.
+
+    Paths to each directory containing data can be altered in the json file
+    'app_config.json'. Each pathway is linked to the corresponding CMIP6 data
+    reference syntax.
     """
     def __init__(self, var=list(), mod=list(), ens=list(), constr=np.array([])):
         self.variable = var
@@ -49,6 +51,7 @@ class Experiments:
                     try:
                         dir = app_config[data_required]['directory']
                         experiment = [model, ensemble, variable]
+                        # create a list of available experiments data
                         self.experiments_list.append(experiment)
                     except:
                         pass
@@ -76,10 +79,11 @@ class Experiments:
 
     def concatenate_data(self, cubes):
         """
-        Concatenates data cubes for all experiments
+        Concatenates data for a single experiment.
         """
         attributes = ['creation_date', 'history', 'tracking_id', 'realm']
         for cube in cubes:
+            # set attributes likely to disrupt concatenate to a blank string
             for attr in attributes:
                 cube.attributes[
                     attr] = ''
@@ -87,37 +91,34 @@ class Experiments:
 
     def load_data(self, params, output):
         """
-        Loads data with defined constraints on time (year), latitude and
-        longitude for single experiment.
-        Returns cube list
+        Loads data with defined constraints on time (year) for single experiment
+        assuming data directory can be found in the .json file.
         """
         experiment = params.get()
-        def my_callback(cube, field, filename):
-            # add a categorical year coordinate to the cube
-            icc.add_year(cube, 'time')
-        year_arr = range(self.constraints[0][0], self.constraints[0][1], 1)
-        constraints = iris.Constraint(year=lambda y: y in year_arr)
+        # constrain over the required time
+        constraints = iris.Constraint(time=lambda cell: self.constraints[0][0]
+                                                        <= cell.point.year <
+                                                        self.constraints[0][1])
         data_required = 'CMIP6.HighResMIP.'+experiment[0]+\
                         '.highresSST-present.'+experiment[1]+'.day.'\
                         +experiment[2]
         dir = app_config[data_required]['directory']
         print('Loading '+experiment[2]+' data for model ensemble '+experiment[0]
               +' '+experiment[1])
-        cubes = iris.load(dir + '*.nc', constraints, callback=my_callback)
+        cubes = iris.load(dir + '*.nc', constraints)
         cubes_diff_units = iris.cube.CubeList([])
         for cube in cubes:
             cube = change_time_units(cube, 'days since 1950-01-01 00:00:00')
             cubes_diff_units.append(cube)
         cube = self.concatenate_data(cubes_diff_units)
+        # Add an aux coord unique to each experiment
         cube = add_experiment_label(cube)
         output.append(cube)
 
     def load_all_data(self):
         """
-        Loads data for multiple experiments based on constraints for time
-        (year) or latitude and longitude.
-        Option to concatenate experiment cubes if required.
-        Returns: A cube list
+        Loads data all experiments in self.experiments_list in parallel.
+        Returns: cube list with single cube per experiment
         """
         print('Starting loading all')
         max_simul_jobs = len(self.experiments_list)

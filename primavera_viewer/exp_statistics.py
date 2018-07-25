@@ -7,7 +7,7 @@ means
 import iris
 import iris.coord_categorisation as icc
 import numpy as np
-from primavera_viewer import cube_format as format
+from primavera_viewer import exp_format as format
 
 
 def annual_mean(cube):

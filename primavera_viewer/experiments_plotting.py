@@ -1,10 +1,10 @@
 from multiprocessing import Process, Manager
 import itertools
 import iris
-from primavera_viewer import cube_statistics as stats
+from primavera_viewer import exp_statistics as stats
 import iris.quickplot as qplt
 import matplotlib.pyplot as plt
-from primavera_viewer import cube_format as format
+from primavera_viewer import exp_format as format
 import numpy as np
 
 class ExperimentsPlotting:

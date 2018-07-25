@@ -8,7 +8,7 @@ from multiprocessing import Process, Manager
 import itertools
 import iris
 import numpy as np
-from primavera_viewer import (nearest_location as loc, cube_format as format)
+from primavera_viewer import (nearest_location as loc, exp_format as format)
 
 
 class ExperimentsData:

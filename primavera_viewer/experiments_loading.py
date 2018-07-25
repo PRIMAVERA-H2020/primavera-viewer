@@ -11,8 +11,8 @@ from multiprocessing import Process, Manager
 import itertools
 import iris
 import numpy as np
-from primavera_viewer.cube_format import (add_experiment_label,
-                                          change_time_units)
+from primavera_viewer.exp_format import (add_experiment_label,
+                                         change_time_units)
 
 print('get json')
 FILENAME = '../app_config.json'

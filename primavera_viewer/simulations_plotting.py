@@ -24,12 +24,12 @@ class SimulationsPlotting:
     """
 
     def __init__(self, sim_list=iris.cube.CubeList([]), loc=np.array([]),
-                 sim_mean=iris.cube.Cube([]), plot='', fil=''):
+                 sim_mean=iris.cube.Cube([]), stats='', out=''):
         self.simulations_list = sim_list
         self.location = loc
         self.simulations_mean = sim_mean
-        self.plot_type = plot
-        self.filter = fil
+        self.statistics = stats
+        self.output = out
 
     def annual_mean_timeseries(self, params, output):
         """
@@ -170,33 +170,37 @@ class SimulationsPlotting:
             cube_list = result_list
         return cube_list
 
-    def simulations_plot(self):
+    def simulations_output(self):
 
         result_cubes = self.simulations_statistics()
-        # Plot the results of the above
-        colours = ['r','b','#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', 'c', 'm']
-        for i, cube in enumerate(result_cubes):
-            cube_label = cube.coord('simulation_label').points[0]
-            cube_name = cube.long_name
-            if cube_label == 'Simulations Mean':
-                qplt.plot(cube, color=self.lighten_color('k', 1.0),
-                          linewidth=1.0)
-            else:
-                qplt.plot(cube, color=self.lighten_color(colours[i], 1.0),
-                          linewidth=1.0)
-
-        # Change final plot details
-        plt.legend()
-        if len(self.location) == 2:
-            plt.title(cube_name+'\n'
-                      'at Lat: '+str(self.location[0])+'N '
-                      'Lon: '+str(self.location[1])+'E')
-        if len(self.location) == 4:
-            plt.title(cube_name+'\n'
-                      'over Lat range: '+str(self.location[0])+'N '
-                      'to '+str(self.location[1])+'N '
-                      'Longitude range: '+str(self.location[2])+'E '
-                      'to '+str(self.location[3])+'E')
-
-        print('Finished plotting at time: ' + str(datetime.now()))
-        return plt.grid(True)
+        # Optional .nc file output
+        if self.output == 'net_cdf':
+            return iris.save(result_cubes, 'primavera_comparison.nc',
+                             netcdf_format="NETCDF3_CLASSIC")
+        # Optional plot output
+        if self.output == 'plot':
+            # Plot the primavera comparison results
+            colours = ['r','b','#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', 'c', 'm']
+            for i, cube in enumerate(result_cubes):
+                cube_label = cube.coord('simulation_label').points[0]
+                cube_name = cube.long_name
+                if cube_label == 'Simulations Mean':
+                    qplt.plot(cube, color=self.lighten_color('k', 1.0),
+                              linewidth=1.0)
+                else:
+                    qplt.plot(cube, color=self.lighten_color(colours[i], 1.0),
+                              linewidth=1.0)
+            # Change final plot details
+            plt.legend()
+            if len(self.location) == 2:
+                plt.title(cube_name+'\n'
+                          'at Lat: '+str(self.location[0])+'N '
+                          'Lon: '+str(self.location[1])+'E')
+            if len(self.location) == 4:
+                plt.title(cube_name+'\n'
+                          'over Lat range: '+str(self.location[0])+'N '
+                          'to '+str(self.location[1])+'N '
+                          'Longitude range: '+str(self.location[2])+'E '
+                          'to '+str(self.location[3])+'E')
+            plt.grid(True)
+            return plt.show()

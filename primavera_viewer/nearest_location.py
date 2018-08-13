@@ -57,17 +57,24 @@ class PointLocation:
         self.rename_longitude()
         all_lat_bounds = self.cube.coord('latitude').bounds
         all_lon_bounds = self.cube.coord('longitude').bounds
-        for i, lat in enumerate(all_lat_bounds):
-            for j, lon in enumerate(all_lon_bounds):
-                lat_bounds = lat    # 2D array of the lower and upper lat bounds
-                lon_bounds = lon    # 2D array of the lower and upper lon bounds
+        # Iterate through each 2D array of the lower and upper bounds
+        for i, lat_bounds in enumerate(all_lat_bounds):
+            for j, lon_bounds in enumerate(all_lon_bounds):
+                # Point must be smaller than max upper bound
                 if lat_bounds[0] <= lat_point < lat_bounds[1]:
                     if lon_bounds[0] <= lon_point < lon_bounds[1]:
-                        return self.cube[:, i, j]
+                        nlat = i
+                        nlon = j
                     else:
                         pass
                 else:
                     pass
+                # Additional statements allowing points to match max upper bound
+                if lat_point == all_lat_bounds[-1][1]:
+                    nlat = i
+                if lon_point == all_lon_bounds[-1][1]:
+                    nlon = j
+        return self.cube[:, nlat, nlon]
 
 class AreaLocation:
 
@@ -135,10 +142,10 @@ class AreaLocation:
         self.rename_longitude()
         all_lat_bounds = self.cube.coord('latitude').bounds
         all_lon_bounds = self.cube.coord('longitude').bounds
-        for i, lat in enumerate(all_lat_bounds):
-            for j, lon in enumerate(all_lon_bounds):
-                lat_bounds = lat    # 2D array of the lower and upper lat bounds
-                lon_bounds = lon    # 2D array of the lower and upper lon bounds
+        # Iterate through each 2D array of the lower and upper bounds
+        for i, lat_bounds in enumerate(all_lat_bounds):
+            for j, lon_bounds in enumerate(all_lon_bounds):
+                # Point must be smaller than max upper bound
                 if lat_bounds[0] <= min_lat_point < lat_bounds[1]:
                     if lon_bounds[0] <= min_lon_point < lon_bounds[1]:
                         nlat_min = i
@@ -147,11 +154,15 @@ class AreaLocation:
                         pass
                 else:
                     pass
-
-        for k, lat in enumerate(all_lat_bounds):
-            for l, lon in enumerate(all_lon_bounds):
-                lat_bounds = lat    # 2D array of the lower and upper lat bounds
-                lon_bounds = lon    # 2D array of the lower and upper lon bounds
+                # Additional statements allowing points to match max upper bound
+                if min_lat_point == all_lat_bounds[-1][1]:
+                    nlat_min = i
+                if min_lon_point == all_lon_bounds[-1][1]:
+                    nlon_min = j
+        # Iterate through each 2D array of the lower and upper bounds
+        for k, lat_bounds in enumerate(all_lat_bounds):
+            for l, lon_bounds in enumerate(all_lon_bounds):
+                # Point must be smaller than max upper bound
                 if lat_bounds[0] <= max_lat_point < lat_bounds[1]:
                     if lon_bounds[0] <= max_lon_point < lon_bounds[1]:
                         nlat_max = k
@@ -160,9 +171,12 @@ class AreaLocation:
                         pass
                 else:
                     pass
-
+                # Additional statements allowing points to match max upper bound
+                if max_lat_point == all_lat_bounds[-1][1]:
+                    nlat_max = i
+                if max_lon_point == all_lon_bounds[-1][1]:
+                    nlon_max = j
         area_subset = self.cube[:, nlat_min:nlat_max+1, nlon_min:nlon_max+1]
         area_mean = area_subset.collapsed(['latitude', 'longitude'],
                                           iris.analysis.MEAN)
-
         return area_mean

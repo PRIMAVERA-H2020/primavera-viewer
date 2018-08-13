@@ -47,8 +47,10 @@ def parse_args():
                         help='input models to compare')
     parser.add_argument('-ens', '--ensembles', nargs='+',
                         help='input ensemble members to compare')
-    parser.add_argument('-plt', '--plot_type',
-                        help='input plot type for data analysis')
+    parser.add_argument('-stat', '--statistics',
+                        help='input statistics for data analysis')
+    parser.add_argument('-out', '--output_type',
+                        help='type of output required from comparison tool')
     parser.add_argument('-styr', '--start_year',
                         help='input start year constraint', type=int)
     parser.add_argument('-enyr', '--end_year',
@@ -79,7 +81,6 @@ def main(args):
     """
     Run comparison of models/ensembles and plot data
     """
-    startTime = datetime.now()
 
     if args.variable:
         variable = args.variable
@@ -99,16 +100,22 @@ def main(args):
         print('ERROR: Must specify ensemble members')
         sys.exit()
 
+    if args.statistics:
+        statistics = args.statistics
+    else:
+        print('ERROR: Must specify statistics')
+        sys.exit()
+
+    if args.output_type:
+        output_type = args.output_type
+    else:
+        print('ERROR: Must specify output_type')
+        sys.exit()
+
     if args.start_year and args.end_year:
         time_constraints = [args.start_year, args.end_year]
     else:
         print('ERROR: No time period specified')
-        sys.exit()
-
-    if args.plot_type:
-        plot_type = args.plot_type
-    else:
-        print('ERROR: Must specify plot type')
         sys.exit()
 
     if args.latitude_point and args.latitude_point:
@@ -122,7 +129,7 @@ def main(args):
                                 args.longitude_max_bound]
     else:
         print('No location specified. Return global average.')
-        location_constraints = [-89.9, 89.9, 0.1, 359.9]
+        location_constraints = [-90.0, 90.0, 0.0, 360.0]
 
     # Create class containing details of all simulations
     simulations_inputs = SimulationsLoading(variable, models,
@@ -143,14 +150,10 @@ def main(args):
     # timeseries and the requested plot type
     result = SimulationsPlotting(simulations_data_unified.simulations_list,
                                  simulations_data_unified.location,
-                                 simulations_mean, plot_type)
+                                 simulations_mean, statistics, output_type)
 
-    # Plot the data as requested
+    # Data output as requested
     result.simulations_plot()
-
-    print('Total ellapsed time: ' + str(datetime.now() - startTime))
-
-    plt.show()
 
 if __name__ == '__main__':
 

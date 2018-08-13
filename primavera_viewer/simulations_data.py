@@ -9,7 +9,7 @@ import itertools
 import iris
 import numpy as np
 from primavera_viewer import (nearest_location as loc, exp_format as format)
-
+from datetime import datetime
 
 class ExperimentsData:
     """
@@ -21,9 +21,11 @@ class ExperimentsData:
     Gregorian and 365 day calendars keep 31/01 and 31/03 to balance 28/02.
     All other 31st days and leap days are removed.
     """
-    def __init__(self, exp_list=iris.cube.CubeList([]), loc=np.array([])):
+    def __init__(self, exp_list=iris.cube.CubeList([]), loc=np.array([]),
+                 t_constr=np.array([])):
         self.experiments_list = exp_list
         self.location = loc
+        self.time_constraints = t_constr
 
     def __repr__(self):
         if len(self.location) == 2:
@@ -83,8 +85,9 @@ class ExperimentsData:
         if len(self.location) == 2:
             latitude_point = self.location[0]
             longitude_point = self.location[1]
-            print('Constraining location at point:\n' + str(latitude_point) +
-                  'N ' + str(longitude_point) + 'E')
+            print('Constraining location for '
+                  +cube.coord('experiment_label').points[0]+' at point:\n'
+                  +str(latitude_point)+'N '+str(longitude_point)+'E')
             cube = loc.PointLocation(latitude_point, longitude_point, cube)
             cube = cube.find_point()
             output.append(cube)
@@ -93,17 +96,18 @@ class ExperimentsData:
             latitude_max = self.location[1]
             longitude_min = self.location[2]
             longitude_max = self.location[3]
-            print('Constraining location over region:\n' 
-                  'Latitude range: ' + str(latitude_min) + 'N to '
-                  + str(latitude_max) + 'N\n'
-                  'Longitude range: ' + str(longitude_min) + 'E to '
-                  + str(longitude_max) + 'E')
+            print('Constraining location for '
+                  +cube.coord('experiment_label').points[0]+' over region:\n' 
+                  'Latitude range: '+str(latitude_min)+'N to '
+                  +str(latitude_max)+'N\n'
+                  'Longitude range: '+str(longitude_min)+'E to '
+                  +str(longitude_max)+'E')
             cube = loc.AreaLocation(latitude_min, latitude_max,
                                        longitude_min, longitude_max, cube)
             cube = cube.find_area()
             output.append(cube)
 
-    def unify_cube_format(self, params, output):
+    def unify_cube_format(self, params, output, time_constr):
         """
         Ensure that all experiments have the same cube format i.e the same time
         coordinates and calendar, attributes, data type and auxillary coords.
@@ -113,8 +117,9 @@ class ExperimentsData:
         of midday.
         """
         cube=params.get()
-        print('Unifying formatting')
-        cube = format.change_calendar(cube,
+        print('Unifying formatting for '
+              +cube.coord('experiment_label').points[0])
+        cube = format.change_calendar(cube, time_constr,
                                       new_units='days since 1950-01-01 '
                                                 '00:00:00')
         cube = format.add_extra_time_coords(cube)
@@ -131,17 +136,30 @@ class ExperimentsData:
         Perform all the above operations in parallel for each experiemnt the
         user wishes to compare.
         """
-
-        operations = [self.unify_spatial_coordinates, self.constrain_location,
-                      self.unify_cube_format]
+        operations = ['unifying spatial coords', 'constraining location',
+                      'unifying cube format']
         for oper in operations:
-            max_simul_jobs = len(self.experiments_list)
+            if self.experiments_list[0].has_lazy_data():
+                print('Before '+oper+': cubes have lazy data')
+            else:
+                print('Before '+oper+': no lazy data')
             jobs = []
             manager = Manager()
             params = manager.Queue()
             result_list = manager.list()
+            sttime = datetime.now()
+            if oper == 'unifying spatial coords':
+                func = self.unify_spatial_coordinates
+                arguments = (params, result_list)
+            if oper == 'constraining location':
+                func = self.constrain_location
+                arguments = (params, result_list)
+            if oper == 'unifying cube format':
+                func = self.unify_cube_format
+                arguments = (params, result_list, self.time_constraints)
+            max_simul_jobs = len(self.experiments_list)
             for i in range(max_simul_jobs):
-                p = Process(target=oper, args=(params, result_list))
+                p = Process(target=func, args=arguments)
                 jobs.append(p)
                 p.start()
             iters = itertools.chain(
@@ -151,6 +169,12 @@ class ExperimentsData:
             for j in jobs:
                    j.join()
             self.experiments_list = iris.cube.CubeList(list(result_list))
+            entime = datetime.now()
+            print('Time ellapsed when ' + oper + ': ' + str(entime - sttime))
+            if self.experiments_list[0].has_lazy_data():
+                print('After '+oper+': cubes have lazy data\n')
+            else:
+                print('After '+oper+': no lazy data\n')
         return self
 
 
@@ -159,21 +183,34 @@ class ExperimentsData:
         Calculates the multi-experiment mean from the cube list of fully unified
         experiments data above.
         """
-        print('Calculating mean')
-        all_cubes_list = iris.cube.CubeList([])
-        for cube in self.experiments_list:
-            try:
-                cube.remove_coord('latitude')
-            except:
-                pass
-            try:
-                cube.remove_coord('longitude')
-            except:
-                pass
-            all_cubes_list.append(cube)
-        cubes = all_cubes_list
-        merged_cube = cubes.merge_cube()
-        experiments_mean = merged_cube.collapsed('experiment_label',
-                                                 iris.analysis.MEAN)
-        experiments_mean.coord('experiment_label').points[0]='Experiments Mean'
-        return experiments_mean
+        if len(self.experiments_list) > 1:
+            sttime = datetime.now()
+            if self.experiments_list[0].has_lazy_data():
+                print('Before calculating mean: cubes have lazy data')
+            else:
+                print('Before calculating mean: no lazy data')
+            all_cubes_list = iris.cube.CubeList([])
+            for cube in self.experiments_list:
+                try:
+                    cube.remove_coord('latitude')
+                except:
+                    pass
+                try:
+                    cube.remove_coord('longitude')
+                except:
+                    pass
+                all_cubes_list.append(cube)
+            cubes = all_cubes_list
+            merged_cube = cubes.merge_cube()
+            experiments_mean = merged_cube.collapsed('experiment_label',
+                                                     iris.analysis.MEAN)
+            experiments_mean.coord('experiment_label').points[0]='Experiments Mean'
+            entime = datetime.now()
+            print('Time ellapsed when calculating mean: ' + str(entime - sttime))
+            if self.experiments_list[0].has_lazy_data():
+                print('After calculating mean: cubes have lazy data\n')
+            else:
+                print('After calculating mean: no lazy data\n')
+            return experiments_mean
+        else:
+            return iris.cube.Cube([])

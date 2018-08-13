@@ -145,7 +145,7 @@ def convert_365day_to_360day(cube):
     doy_365_to_360_con = iris.Constraint(time=doy_365_to_360)
     return cube.extract(doy_365_to_360_con)
 
-def change_calendar(cube, new_units):
+def change_calendar(cube, time_constr, new_units):
     """
     Purpose: Converts a list of cubes with varying calendars (gregorian,
     365_day, 360_day) to 360 day calendars by removing extra dates and replacing
@@ -161,9 +161,10 @@ def change_calendar(cube, new_units):
     else:
         cube = convert_365day_to_360day(cube)
         # add new set of coordinates so that dates are consistent
+        sttime_point = (time_constr[0] - 1950) * 360
+        entime_point = (time_constr[1] - 1950) * 360
         cube.remove_coord('time')
-        npoints = len(cube.coord('year').points)
-        new_points = np.arange(0, npoints, 1)
+        new_points = np.arange(sttime_point, entime_point, 1)
         time_coord = iris.coords.DimCoord(new_points, standard_name='time',
                                           long_name='time',
                                           var_name='time',
@@ -234,7 +235,8 @@ def set_blank_attributes(cube):
                   'title', 'license', 'cmor_version', 'branch_time_in_parent',
                   'branch_time_in_child', 'parent_time_units', 'member_id',
                   'parent_source_id', 'parent_variant_label','grid_label',
-                  'source_type', 'run_variant', 'branch_time']
+                  'source_type', 'run_variant', 'branch_time', 'creation_date',
+                  'history', 'tracking_id', 'realm']
     for attr in attributes:
         cube.attributes[attr] = ''
     return cube

@@ -10,10 +10,10 @@ import numpy as np
 from cf_units import Unit
 
 
-def add_experiment_label(cube):
+def add_simulation_label(cube):
     new_coord = iris.coords.AuxCoord(cube.attributes['source_id'] + ' ' +
                                      cube.attributes['variant_label'],
-                                     long_name='experiment_label',
+                                     long_name='simulation_label',
                                      units='no_unit')
     cube.add_aux_coord(new_coord)
     return cube
@@ -24,9 +24,9 @@ def redefine_spatial_coords(cube):
     Redefines the latitude and longitude points for the EC-Earth3 model
     into single, rather than multi-dimensional, coordinates.
     """
-    experiment_label = cube.coord('experiment_label').points[0]
+    simulation_label = cube.coord('simulation_label').points[0]
 
-    if experiment_label == 'EC-Earth3 r1i1p1f1':
+    if simulation_label == 'EC-Earth3 r1i1p1f1':
         # procedure for handling EC-Earth latitude conversion
         cube.coord('cell index along second dimension').points = cube.coord(
             'latitude').points[:,0]
@@ -54,7 +54,7 @@ def redefine_spatial_coords(cube):
 
 def add_extra_time_coords(cube):
     """
-    Adds new coordinate for indexing a given experiment based on model and
+    Adds new coordinate for indexing a given simulation based on model and
     ensemble and adds additional time coordinates for unit manipulation
     """
     if not cube.coords('year'):
@@ -228,7 +228,7 @@ def set_blank_attributes(cube):
     """
     attributes = ['further_info_url', 'initialization_index', 'mo_runid',
                   'table_info', 'variant_label', 'CDO', 'parent_activity_id',
-                  'parent_experiment_id', 'original_name', 'contact',
+                  'parent_simulation_id', 'original_name', 'contact',
                   'branch_method', 'variant_info','CDI', 'references',
                   'parent_mip_era', 'data_specs_version', 'grid', 'institution',
                   'institution_id', 'nominal_resolution', 'source', 'source_id',
@@ -236,7 +236,8 @@ def set_blank_attributes(cube):
                   'branch_time_in_child', 'parent_time_units', 'member_id',
                   'parent_source_id', 'parent_variant_label','grid_label',
                   'source_type', 'run_variant', 'branch_time', 'creation_date',
-                  'history', 'tracking_id', 'realm']
+                  'history', 'tracking_id', 'realm','nco_openmp_thread_number',
+                  'parent_experiment_id']
     for attr in attributes:
         cube.attributes[attr] = ''
     return cube

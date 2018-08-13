@@ -139,15 +139,10 @@ class SimulationsData:
         operations = ['unifying spatial coords', 'constraining location',
                       'unifying cube format']
         for oper in operations:
-            if self.simulations_list[0].has_lazy_data():
-                print('Before '+oper+': cubes have lazy data')
-            else:
-                print('Before '+oper+': no lazy data')
             jobs = []
             manager = Manager()
             params = manager.Queue()
             result_list = manager.list()
-            sttime = datetime.now()
             if oper == 'unifying spatial coords':
                 func = self.unify_spatial_coordinates
                 arguments = (params, result_list)
@@ -170,11 +165,6 @@ class SimulationsData:
                    j.join()
             self.simulations_list = iris.cube.CubeList(list(result_list))
             entime = datetime.now()
-            print('Time ellapsed when ' + oper + ': ' + str(entime - sttime))
-            if self.simulations_list[0].has_lazy_data():
-                print('After '+oper+': cubes have lazy data\n')
-            else:
-                print('After '+oper+': no lazy data\n')
         return self
 
 

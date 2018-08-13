@@ -1,19 +1,18 @@
-
-
 """
-Philip Rutter 26/06/18
+nearest_location.py
+===================
 
-Nearest Known Point module
+Philip Rutter 13/08/18
 
-Creates a class defined by a latitude and a longitude and an experiment that
-finds the nearest known point in the given model and/or defines a region to be
-averaged over for location analysis.
+Nearest known location module.
 
+Creates a class defined by latitudes and a longitudes and a simulation that
+finds the nearest known location in the given model and defines the region to be
+averaged over for location analysis if latitude and longitude bounds are
+defined.
 """
 
-import numpy as np
 import iris
-from primavera_viewer import exp_format as format
 
 class PointLocation:
 
@@ -136,8 +135,6 @@ class AreaLocation:
         self.rename_longitude()
         all_lat_bounds = self.cube.coord('latitude').bounds
         all_lon_bounds = self.cube.coord('longitude').bounds
-        # print(all_lat_bounds)
-        # print(all_lon_bounds)
         for i, lat in enumerate(all_lat_bounds):
             for j, lon in enumerate(all_lon_bounds):
                 lat_bounds = lat    # 2D array of the lower and upper lat bounds
@@ -165,8 +162,6 @@ class AreaLocation:
                     pass
 
         area_subset = self.cube[:, nlat_min:nlat_max+1, nlon_min:nlon_max+1]
-        # print(area_subset.coord('latitude').points)
-        # print(area_subset.coord('longitude').points)
         area_mean = area_subset.collapsed(['latitude', 'longitude'],
                                           iris.analysis.MEAN)
 

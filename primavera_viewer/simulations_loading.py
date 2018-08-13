@@ -19,7 +19,7 @@ from datetime import datetime
 warnings.filterwarnings("ignore")
 
 # Load in json file containing data dirs
-FILENAME = '../app_config.json'
+FILENAME = 'app_config.json'
 # Read the config file in
 with open(FILENAME) as fh:
     app_config = json.load(fh)

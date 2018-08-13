@@ -153,7 +153,7 @@ def main(args):
                                  simulations_mean, statistics, output_type)
 
     # Data output as requested
-    result.simulations_plot()
+    result.simulations_output()
 
 if __name__ == '__main__':
 

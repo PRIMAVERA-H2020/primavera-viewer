@@ -111,21 +111,21 @@ class SimulationsPlotting:
         manager = Manager()
         params = manager.Queue()
         result_list = manager.list()
-        if self.plot_type == 'annual_mean_timeseries':
+        if self.statistics == 'annual_mean_timeseries':
             plot_func = self.annual_mean_timeseries
             arguments = (params, result_list)
             self.simulations_list.append(self.simulations_mean)
-        elif self.plot_type == 'monthly_mean_timeseries':
+        elif self.statistics == 'monthly_mean_timeseries':
             plot_func = self.monthly_mean_timeseries
             arguments = (params, result_list)
             self.simulations_list.append(self.simulations_mean)
-        elif self.plot_type == 'daily_anomaly_timeseries':
+        elif self.statistics == 'daily_anomaly_timeseries':
             plot_func = self.daily_anomaly_timeseries
             arguments = (params, result_list)
-        elif self.plot_type == 'monthly_mean_anomaly_timeseries':
+        elif self.statistics == 'monthly_mean_anomaly_timeseries':
             plot_func = self.monthly_mean_anomaly_timeseries
             arguments = (params, result_list)
-        elif self.plot_type == 'monthly_maximum_anomaly_timeseries':
+        elif self.statistics == 'monthly_maximum_anomaly_timeseries':
             plot_func = self.monthly_maximum_anomaly_timeseries
             arguments = (params, result_list)
         else:
@@ -145,21 +145,21 @@ class SimulationsPlotting:
 
         # Problem with merging monthly anomaly cubes inside parallel branches
         # must complete merge outside of the loop
-        if self.plot_type == 'monthly_mean_anomaly_timeseries':
+        if self.statistics == 'monthly_mean_anomaly_timeseries':
             cube_list = iris.cube.CubeList([])
             for i in np.arange(0, len(result_list), 1):
                 cubes = result_list[i]
                 cube = cubes.merge_cube()
                 cube = format.change_time_points(cube, dy=1, hr=00)
                 cube_list.append(cube)
-        elif self.plot_type == 'monthly_maximum_anomaly_timeseries':
+        elif self.statistics == 'monthly_maximum_anomaly_timeseries':
             cube_list = iris.cube.CubeList([])
             for i in np.arange(0, len(result_list), 1):
                 cubes = result_list[i]
                 cube = cubes.merge_cube()
                 cube = format.change_time_points(cube, dy=1, hr=00)
                 cube_list.append(cube)
-        elif self.plot_type == 'daily_anomaly_timeseries':
+        elif self.statistics == 'daily_anomaly_timeseries':
             cube_list = iris.cube.CubeList([])
             for i in np.arange(0, len(result_list), 1):
                 cubes = result_list[i]
@@ -175,8 +175,10 @@ class SimulationsPlotting:
         result_cubes = self.simulations_statistics()
         # Optional .nc file output
         if self.output == 'net_cdf':
-            return iris.save(result_cubes, 'primavera_comparison.nc',
-                             netcdf_format="NETCDF3_CLASSIC")
+            # output save file to directory
+            iris.save(result_cubes, 'primavera_comparison.nc',
+                      netcdf_format="NETCDF3_CLASSIC")
+            return result_cubes
         # Optional plot output
         if self.output == 'plot':
             # Plot the primavera comparison results
@@ -204,3 +206,4 @@ class SimulationsPlotting:
                           'to '+str(self.location[3])+'E')
             plt.grid(True)
             return plt.show()
+

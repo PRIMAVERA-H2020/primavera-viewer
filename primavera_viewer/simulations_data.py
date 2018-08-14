@@ -1,5 +1,8 @@
 """
-Philip Rutter 11/07/18
+simulations_data.py
+===================
+
+Philip Rutter 14/08/18
 
 Module defines a class 'SimulationsData' used to manipulating and handling data
 from simulations once fully loaded and concatenated.
@@ -23,6 +26,17 @@ class SimulationsData:
     """
     def __init__(self, sim_list=iris.cube.CubeList([]), loc=np.array([]),
                  t_constr=np.array([])):
+        """
+        Initialise the class.
+
+        :param iris.cube.CubeList sim_list: Cube list containing concatenated
+        lazy data for each simulation
+        :param np.array loc: An array to be used for constraining at location
+        (a two element array for a point or four element array for regional
+        boundaries)
+        :param np.array t_constr: A two element array for specifying start and
+        end year of data
+        """
         self.simulations_list = sim_list
         self.location = loc
         self.time_constraints = t_constr
@@ -64,9 +78,14 @@ class SimulationsData:
 
     def unify_spatial_coordinates(self, params, output):
         """
-        Ensure that all spatial dimensions are defined by the same coordinate
+        Ensures that all spatial dimensions are defined by the same coordinate
         system: two 1D arrays of latitude and longitude coordinates.
         Method for redefining spatial coordinates can be specific to each model.
+
+        :param iris.cube.Cube params: Cube to spatially unify
+        :param iris.cube.CubeList output: Cube list to contain spatially unified
+         cubes
+        :return iris.cube.Cube: Spatially unified cube
         """
         cube = params.get()
         cube = format.redefine_spatial_coords(cube)
@@ -80,6 +99,10 @@ class SimulationsData:
         found. If self.location is a 4D array of min/max latitude and longitude
         points an AreaLocation class is created finding all nearest known points
         in the defined area and returning an area mean.
+
+        :param iris.cube.Cube params: Cube to constrain at location
+        :param iris.cube.CubeList output: Cube list to contain constrained cubes
+        :return iris.cube.Cube: Constrained cube
         """
         cube = params.get()
         if len(self.location) == 2:
@@ -115,6 +138,12 @@ class SimulationsData:
         Example: units are currently set to be unified as
         'days since 1950-01-01 00:00:00' and daily data is defined at the hour
         of midday.
+
+        :param iris.cube.Cube params: Cube to reformat
+        :param iris.cube.CubeList output: Cube list to contain reformatted cubes
+        :param np.array t_constr: A two element array for specifying start and
+        end year of data
+        :return iris.cube.Cube: Reformatted cube
         """
         cube=params.get()
         print('Unifying formatting for '
@@ -135,6 +164,8 @@ class SimulationsData:
         """
         Perform all the above operations in parallel for each simulation the
         user wishes to compare.
+
+        :return self: self.simulations_list refactored as the unified cube list
         """
         operations = ['unifying spatial coords', 'constraining location',
                       'unifying cube format']
@@ -164,7 +195,6 @@ class SimulationsData:
             for j in jobs:
                    j.join()
             self.simulations_list = iris.cube.CubeList(list(result_list))
-            entime = datetime.now()
         return self
 
 
@@ -172,6 +202,9 @@ class SimulationsData:
         """
         Calculates the multi-simulation mean from the cube list of fully unified
         simulations data above.
+
+        :return iris.cube.Cube simulations_mean: A single iris cube calculated
+        from the mean of all the cube simulations at each time point
         """
         if len(self.simulations_list) > 1:
             sttime = datetime.now()

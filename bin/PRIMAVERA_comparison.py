@@ -1,7 +1,10 @@
 """
-Philip Rutter 11/07/18
+PRIMAVERA_comparison.py
+=======================
 
-PRIMAVERA data plotting operation module
+Philip Rutter 14/08/18
+
+PRIMAVERA data comparison operation module
 
 Inputs:
 - Start dates and end dates for the time series
@@ -10,23 +13,19 @@ available)
 - Model names and ensemble members to compare at respective resolutions
 - Location. Either at a single point of reference or latitude longitude
 boundaries defining an area
-- Plot type
+- Statistical analysis type
+- Output type
 
-Creates an 'SimulationsLoading' class defining all of the above inputs. Uses
-constrained loading to restrict timespan and loads in all required data before
+Create a 'SimulationsLoading' class defining all of the above inputs. Use
+constrained loading to restrict time span and loads in all required data before
 concatenating. Output is a list of the cubes to be compared.
 
 The 'SimulationsData' class unifies the simulation's cube data (spatial
-dimensions, formatting and location) in order to produce an accurate timeseries
+dimensions, formatting and location) in order to produce a time series
 comparison.
 
-'SimulationsPlotting' uses the simulations mean and plot type to visualise data.
-
-Model_input options: ['MOHC.HadGEM3-GC31-LM', 'CMCC.CMCC-CM2-HR4',
-                      'EC-Earth-Consortium.EC-Earth3', 'ECMWF.ECMWF-IFS-LR']
-Ensemble input options: ['r1i1p1f1', 'r1i2p1f1', 'r1i3p1f1']
-Variable input options: ['tasmin', 'tasmax']
-
+'SimulationsOutput' uses the simulations mean, requested statistics and output
+type to visualise finalised data for comparison.
 
 """
 from primavera_viewer.simulations_loading import *
@@ -79,7 +78,8 @@ def parse_args():
 
 def main(args):
     """
-    Run comparison of models/ensembles and plot data
+    Assign command line arguments to associated exceptions.
+    Run comparison of models/ensembles and plot data.
     """
 
     if args.variable:
@@ -141,23 +141,22 @@ def main(args):
                                        loc=location_constraints,
                                        t_constr=time_constraints)
 
-    # Unify simulation spacial coordinate systems
+    # Unify simulation spacial coordinate systems and constrain at location
     simulations_data_unified = simulations_data.simulations_operations()
 
     simulations_mean = simulations_data_unified.all_simulations_mean()
 
-    # Create class containing data from all simulations, the simulation mean
-    # timeseries and the requested plot type
-    result = SimulationsPlotting(simulations_data_unified.simulations_list,
+    # Create class containing data from all simulations, the simulation mean,
+    # the statical analysis requested and output type
+    output = SimulationsOutput(simulations_data_unified.simulations_list,
                                  simulations_data_unified.location,
                                  simulations_mean, statistics, output_type)
 
     # Data output as requested
-    result.simulations_output()
+    output.simulations_result()
 
 if __name__ == '__main__':
 
     args = parse_args()
-
     # Run the code
     main(args)

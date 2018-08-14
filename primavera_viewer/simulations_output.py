@@ -1,9 +1,11 @@
 """
+simulations_output.py
+=====================
+
 Philip Rutter 13/08/18
 
-Module defines a class 'SimulationsPlotting' used to perform simulation
-statistics based on the require plotting function. Results are then displayed
-in a plot.
+Module defines a class 'SimulationsOutput' used to perform requested simulation
+statistics and results output. Results are displayed as a plot or '.nc' file
 """
 
 from multiprocessing import Process, Manager
@@ -11,11 +13,10 @@ import itertools
 from primavera_viewer import sim_statistics as stats
 import iris.quickplot as qplt
 from primavera_viewer import sim_format as format
-from datetime import datetime
 from primavera_viewer.timeseries_filter import *
 import sys
 
-class SimulationsPlotting:
+class SimulationsOutput:
     """
     Class that contains the data for each simulation in a cube
     simulations list. The mean of these simulations is also included. A

@@ -1,7 +1,10 @@
 """
-Philip Rutter 25/07/18
+simulations_loading.py
+======================
 
-Module for loading and concatenation of data from multiple models aand ensembles
+Philip Rutter 14/08/18
+
+Module for loading and concatenation of data from multiple models and ensembles
 for a given variable.
 
 """
@@ -37,6 +40,19 @@ class SimulationsLoading:
     reference syntax (DRS).
     """
     def __init__(self, var=list(), mod=list(), ens=list(), constr=np.array([])):
+        """
+        Initialise the class and create a list of the requested simulations that
+        exist in the JSON configuration file.
+
+        :param list var: Single variable (or multiple) in DRS format
+        <variable_id>
+        :param list mod: Models for comparison in DRS format
+        <institution_id>.<source_id>
+        :param list ens: Ensembles relating to above models required for comparison
+        in DRS format <member_id>
+        :param np.array constr: Time bounds for constraining data. A two element
+        numpy array in the format ([start year, end year])
+        """
         self.variable = var
         self.models = mod
         self.ensembles = ens
@@ -87,6 +103,10 @@ class SimulationsLoading:
     def concatenate_data(self, cubes):
         """
         Concatenates data for a single simulation.
+        :param iris.cube.CubeList cubes: A cube list of single cubes from a
+        single simulation forming a data set contiguous over the specified time
+        constraints
+        :return iris.cube.Cube: A single cube from the concatenated cube list
         """
         attributes = ['creation_date', 'history', 'tracking_id', 'realm']
         for cube in cubes:
@@ -100,7 +120,14 @@ class SimulationsLoading:
     def load_data(self, params, output):
         """
         Loads data with defined constraints on time (year) for single simulation
-        assuming data directory can be found in the .json file.
+        assuming data directory can be found in the .json file. Each load
+        operation performed in parallel.
+
+        :param list params: A list in the format ['model','ensemble','variable']
+        :param iris.cube.CubeList output: CubeList to contain loaded,
+        concatenated data for all simulations
+        :return iris.cube.Cube: A single cube loaded and concatenated with
+        simulation data
         """
         simulation = params.get()
         # constrain over the required time
@@ -130,7 +157,9 @@ class SimulationsLoading:
     def load_all_data(self):
         """
         Loads data all simulations in self.simulations_list in parallel.
-        Returns: cube list with single cube per simulation
+
+        :return iris.cube.CubeList: cube list of fully loaded and concatenated
+        data from each simulation
         """
         sttime = datetime.now()
         print('Starting loading all at: '+str(sttime))

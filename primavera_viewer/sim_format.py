@@ -1,4 +1,7 @@
 """
+sim_format.py
+=============
+
 Philip Rutter 10/07/18
 Main module for formatting individual cubes processing unit conversions,
 additional coordinates, calendars, other time dimension issues and data types
@@ -56,6 +59,7 @@ def add_extra_time_coords(cube):
     """
     Adds new coordinate for indexing a given simulation based on model and
     ensemble and adds additional time coordinates for unit manipulation
+    :return iris.cube.Cube cube: Single cube with additional time coordinates
     """
     if not cube.coords('year'):
         icc.add_year(cube, 'time')
@@ -73,6 +77,7 @@ def remove_extra_time_coords(cube):
     """
     Removes the coordinates defined above to revert cube back to its original
     coordinates
+    :return iris.cube.Cube cube: Single cube without time coordinates
     """
     try:
         cube.remove_coord('year')

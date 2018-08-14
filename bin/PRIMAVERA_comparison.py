@@ -30,7 +30,7 @@ type to visualise finalised data for comparison.
 """
 from primavera_viewer.simulations_loading import *
 from primavera_viewer.simulations_data import *
-from primavera_viewer.simulations_plotting import *
+from primavera_viewer.simulations_output import *
 import argparse
 import sys
 

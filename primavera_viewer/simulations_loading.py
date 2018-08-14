@@ -14,6 +14,7 @@ import numpy as np
 from primavera_viewer.sim_format import (add_simulation_label,
                                          change_time_units)
 from datetime import datetime
+import sys
 
 # Ignore warnings displayed when loading data
 warnings.filterwarnings("ignore")
@@ -56,9 +57,12 @@ class SimulationsLoading:
                         simulation = [model, ensemble, variable]
                         self.simulations_list.append(simulation)
                     except:
-                        print('ERROR: directory for '+model+'.'+ensemble+'.'
+                        print('Directory for '+model+'.'+ensemble+'.'
                               +variable+' does not exist')
                         pass
+                    if not self.simulations_list:
+                        print('ERROR: Specifed simulations do not exist')
+                        sys.exit()
 
     def set_variable(self, var):
         self.variable = var

@@ -170,7 +170,7 @@ class SimulationsPlotting:
             cube_list = result_list
         return cube_list
 
-    def simulations_output(self):
+    def simulations_result(self):
 
         result_cubes = self.simulations_statistics()
         # Optional .nc file output

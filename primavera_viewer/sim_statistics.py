@@ -1,16 +1,24 @@
 """
+sim_statistics.py
+=================
+
 Philip Rutter 13/08/18
 Module for single cube statistical methods such as annual/monthly means and
 anomalies.
 """
 
 import iris
-import iris.coord_categorisation as icc
 import numpy as np
 from primavera_viewer import sim_format as format
 
 
 def annual_mean(cube):
+    """
+    Creates year-by-year annual mean time series
+
+    :param cube: iris.cube.Cube
+    :return: annual mean iris.cube.Cube time series
+    """
     print('getting annual mean '+cube.coord('simulation_label').points[0])
     cube = format.add_extra_time_coords(cube)
     annual_mean_cube = cube.aggregated_by('year', iris.analysis.MEAN)
@@ -19,6 +27,12 @@ def annual_mean(cube):
 
 
 def monthly_analysis(cube):
+    """
+    Creates month-by-month annual mean/max/min time series
+
+    :param cube: iris.cube.Cube
+    :return: monthly analysis iris.cube.Cube time series
+    """
     print('getting monthly mean '+cube.coord('simulation_label').points[0])
     cube = format.add_extra_time_coords(cube)
     monthly_mean_cube = cube.aggregated_by(['month','year'], iris.analysis.MEAN)
@@ -33,6 +47,12 @@ def monthly_analysis(cube):
 
 
 def daily_anomaly(cube):
+    """
+    Creates daily anomaly time series from all months mean over time period
+
+    :param cube: iris.cube.Cube
+    :return: daily anomaly iris.cube.Cube time series
+    """
     print('getting daily anomaly '+cube.coord('simulation_label').points[0])
     daily_mean_cube = format.add_extra_time_coords(cube)
     daily_mean_anomaly_list = iris.cube.CubeList([])
@@ -52,6 +72,12 @@ def daily_anomaly(cube):
 
 
 def monthly_mean_anomaly(cube):
+    """
+    Creates monthly mean time series from all months mean over time period
+
+    :param cube: iris.cube.Cube
+    :return: monthly mean anomaly iris.cube.Cube time series
+    """
     print('getting monthly mean anomaly '
           +cube.coord('simulation_label').points[0])
     cube = format.add_extra_time_coords(cube)
@@ -76,6 +102,12 @@ def monthly_mean_anomaly(cube):
 
 
 def monthly_maximum_anomaly(cube):
+    """
+    Creates monthly maximum time series from all months mean over time period
+
+    :param cube: iris.cube.Cube
+    :return: monthly maximum anomaly iris.cube.Cube time series
+    """
     print('getting monthly maximum anomaly '
           +cube.coord('simulation_label').points[0])
     cube = format.add_extra_time_coords(cube)
@@ -100,6 +132,12 @@ def monthly_maximum_anomaly(cube):
 
 
 def monthly_minimum_anomaly(cube):
+    """
+     Creates monthly minimum time series from all months mean over time period
+
+     :param cube: iris.cube.Cube
+     :return: monthly minimum anomaly iris.cube.Cube time series
+     """
     print('getting monthly minimum anomaly '
           +cube.coord('simulation_label').points[0])
     cube = format.add_extra_time_coords(cube)
@@ -123,7 +161,7 @@ def monthly_minimum_anomaly(cube):
     return monthly_min_anomaly_list
 
 
-# SEASONAL MEAN
+# SEASONAL MEAN ANALYSIS
 # def seasonal_mean(cube):
 #     seasons = ['winter','summer']
 #     icc.add_season(cube, 'time', 'clim_season')

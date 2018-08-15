@@ -13,7 +13,6 @@ import json
 from multiprocessing import Process, Manager
 import itertools
 import iris
-import numpy as np
 from primavera_viewer.sim_format import (add_simulation_label,
                                          change_time_units)
 from datetime import datetime
@@ -38,8 +37,15 @@ class SimulationsLoading:
     Paths to each directory containing data can be altered in the json file
     'app_config.json'. Each pathway is linked to the corresponding CMIP6 data
     reference syntax (DRS).
+
+    Example:
+    SimulationsLoading(var = ['tasmax'],
+                       mod = ['MOHC.HadGEM3-GC31-LM', 'MOHC.HadGEM3-GC31-HM'
+                              'CMCC.CMCC-CM2-HR4', ' ECMWF.ECMWF-IFS-LR']
+                       ens = ['r1i1p1f1']
+                       constr = [1950, 2010])
     """
-    def __init__(self, var=list(), mod=list(), ens=list(), constr=np.array([])):
+    def __init__(self, var=list(), mod=list(), ens=list(), constr=([])):
         """
         Initialise the class and create a list of the requested simulations that
         exist in the JSON configuration file.
@@ -50,8 +56,8 @@ class SimulationsLoading:
         <institution_id>.<source_id>
         :param list ens: Ensembles relating to above models required for comparison
         in DRS format <member_id>
-        :param np.array constr: Time bounds for constraining data. A two element
-        numpy array in the format ([start year, end year])
+        :param array constr: Time bounds for constraining data. A two element
+        array in the format [start year, end year]
         """
         self.variable = var
         self.models = mod

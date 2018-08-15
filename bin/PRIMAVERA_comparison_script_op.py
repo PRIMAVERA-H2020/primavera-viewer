@@ -13,7 +13,7 @@ Model_input options: ['MOHC/HadGEM3-GC31-LM', 'MOHC/HadGEM3-GC31-MM',
                       'EC-Earth-Consortium/EC-Earth3', 'ECMWF/ECMWF-IFS-LR']
 Ensemble input options: ['r1i1p1f1', 'r1i2p1f1', 'r1i3p1f1']
 Variable input options: ['tasmin', 'tasmax']
-Statistics input options: 'annual_mean_timeseries', 'monthly_mean_anomaly'
+Statistics input options: 'annual_mean_timeseries', 'monthly_mean_timeseries'
                     'daily_anomaly_timeseries',
                     'monthly_mean_anomaly_timeseries',
                     'monthly_maximum_anomaly_timeseries'

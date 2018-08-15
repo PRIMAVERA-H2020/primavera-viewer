@@ -23,18 +23,23 @@ class SimulationsData:
     Note: All calendars are converted to a 360 day calendar by this script.
     Gregorian and 365 day calendars keep 31/01 and 31/03 to balance 28/02.
     All other 31st days and leap days are removed.
+
+    Example:
+    SimulationsData(sim_list = a_raw_cube_list
+                    loc = [30.2, 45.7], # or [30.2, 34.3, 45.7, 48.5] for area
+                    t_constr = [1950, 2010])
     """
-    def __init__(self, sim_list=iris.cube.CubeList([]), loc=np.array([]),
-                 t_constr=np.array([])):
+    def __init__(self, sim_list=iris.cube.CubeList([]), loc=([]),
+                 t_constr=([])):
         """
         Initialise the class.
 
         :param iris.cube.CubeList sim_list: Cube list containing concatenated
         lazy data for each simulation
-        :param np.array loc: An array to be used for constraining at location
+        :param array loc: An array to be used for constraining at location
         (a two element array for a point or four element array for regional
         boundaries)
-        :param np.array t_constr: A two element array for specifying start and
+        :param array t_constr: A two element array for specifying start and
         end year of data
         """
         self.simulations_list = sim_list

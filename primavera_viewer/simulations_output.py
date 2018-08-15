@@ -13,7 +13,6 @@ import itertools
 from primavera_viewer import sim_statistics as stats
 import iris.quickplot as qplt
 from primavera_viewer import sim_format as format
-from primavera_viewer.timeseries_filter import *
 import sys
 
 class SimulationsOutput:

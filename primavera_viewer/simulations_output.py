@@ -8,11 +8,14 @@ Module defines a class 'SimulationsOutput' used to perform requested simulation
 statistics and results output. Results are displayed as a plot or '.nc' file
 """
 
+import iris
+import numpy as np
 from multiprocessing import Process, Manager
 import itertools
 from primavera_viewer import sim_statistics as stats
-import iris.quickplot as qplt
 from primavera_viewer import sim_format as format
+import iris.quickplot as qplt
+import matplotlib.pyplot as plt
 import sys
 
 class SimulationsOutput:

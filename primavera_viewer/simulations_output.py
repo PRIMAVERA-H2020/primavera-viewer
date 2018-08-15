@@ -217,10 +217,12 @@ class SimulationsOutput:
                 cube_label = cube.coord('simulation_label').points[0]
                 cube_name = cube.long_name
                 if cube_label == 'Simulations Mean':
-                    qplt.plot(cube, color=self.lighten_color('k', 1.0),
+                    qplt.plot(cube, label=cube_label,
+                              color=self.lighten_color('k', 1.0),
                               linewidth=1.0)
                 else:
-                    qplt.plot(cube, color=self.lighten_color(colours[i], 1.0),
+                    qplt.plot(cube, label=cube_label,
+                              color=self.lighten_color(colours[i], 1.0),
                               linewidth=1.0)
             # Change final plot details
             plt.legend()

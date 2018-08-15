@@ -30,7 +30,7 @@ class SimulationsOutput:
                      loc = [30.2, 45.7], # or [30.2, 34.3, 45.7, 48.5] for area
                      sim_mean = a_single_cube_mean,
                      stats = 'daily_anomaly_timeseries',
-                     out = 'net_cdf')
+                     out = 'netCDF')
     """
 
     def __init__(self, sim_list=iris.cube.CubeList([]), loc=([]),
@@ -204,7 +204,7 @@ class SimulationsOutput:
 
         result_cubes = self.simulations_statistics()
         # Optional .nc file output
-        if self.output == 'net_cdf':
+        if self.output == 'netCDF':
             # output save file to directory
             iris.save(result_cubes, 'primavera_comparison.nc',
                       netcdf_format="NETCDF3_CLASSIC")

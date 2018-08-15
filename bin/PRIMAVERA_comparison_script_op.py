@@ -17,7 +17,7 @@ Statistics input options: 'annual_mean_timeseries', 'monthly_mean_timeseries'
                     'daily_anomaly_timeseries',
                     'monthly_mean_anomaly_timeseries',
                     'monthly_maximum_anomaly_timeseries'
-Output options: 'net_cdf', 'plot'
+Output options: 'netCDF', 'plot'
 """
 
 
@@ -59,7 +59,7 @@ def main():
                                simulations_data_unified.location,
                                simulations_mean,
                                stats = 'monthly_mean_anomaly_timeseries',
-                               out = 'net_cdf')
+                               out = 'netCDF')
 
     # output result
     result.simulations_result()

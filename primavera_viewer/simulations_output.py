@@ -212,7 +212,8 @@ class SimulationsOutput:
         # Optional plot output
         if self.output == 'plot':
             # Plot the primavera comparison results
-            colours = ['r','b','#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', 'c', 'm']
+            colours = ['r','b','#1f77b4', '#ff7f0e',
+                       '#2ca02c', '#d62728', 'c', 'm']
             for i, cube in enumerate(result_cubes):
                 cube_label = cube.coord('simulation_label').points[0]
                 cube_name = cube.long_name

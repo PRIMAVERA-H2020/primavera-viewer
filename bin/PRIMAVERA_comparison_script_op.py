@@ -6,6 +6,7 @@ Philip Rutter 13/07/18
 
 Operation module for PRIMAVERA_comparison allowing python script editing rather
 than command line operation
+MUST CHANGE LOCATION OF JSON FILE TO: '../app_config.json'
 
 Model_input options: ['MOHC/HadGEM3-GC31-LM', 'MOHC/HadGEM3-GC31-MM',
                       'MOHC/HadGEM3-GC31-HM', 'CMCC/CMCC-CM2-HR4',

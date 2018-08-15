@@ -2,21 +2,36 @@
 nearest_location.py
 ===================
 
-Philip Rutter 13/08/18
+Philip Rutter 15/08/18
 
 Nearest known location module.
 
 Creates a class defined by latitudes and a longitudes and a simulation that
-finds the nearest known location in the given model and defines the region to be
-averaged over for location analysis if latitude and longitude bounds are
-defined.
+finds the nearest known location in the given model and, if latitude and
+longitude bounds are specified, defines the region to be averaged over for
+location analysis.
 """
 
 import iris
 
 class PointLocation:
+    """
+    Class defined by a latitude point, a longitude point and a single cube
+    constrained only in time from the simulations data set. These points are
+    used as a reference to find the nearest known neighbour point within the
+    cube model using 'find_point'.
+    The result is a cube sub-setted at the nearest location to the input point.
+    """
 
     def __init__(self, lat, lon, cube=iris.cube.Cube):
+        """
+        Initialise the class.
+
+        :param float lat: Latitude point to constrain nearest known location to
+        :param float lon: Longitude point to constrain nearest known location to
+        :param iris.cube.Cube cube: A single cube from one simulation
+        constrained only in time
+        """
         self.latitude = lat
         self.longitude = lon
         self.cube = cube
@@ -31,12 +46,20 @@ class PointLocation:
         self.cube = cube
 
     def rename_latitude(self):
+        """
+        Rename the latitude coordinate of the input cube to the unified format
+        required to merge all simulations and perform statistics
+        """
         try:
             self.cube.coord('grid_latitude').rename('latitude')
         except:
             pass
 
     def rename_longitude(self):
+        """
+        Rename the longitude coordinate of the input cube to the unified format
+        required to merge all simulations and perform statistics
+        """
         try:
             self.cube.coord('grid_longitude').rename('longitude')
         except:
@@ -51,6 +74,14 @@ class PointLocation:
             latitude=self.latitude, longitude=self.longitude, cube=self.cube)
 
     def find_point(self):
+        """
+        Based on the the input latitude/longitude point coordinate, finds the
+        nearest neighbouring point int the specified cube's coordinate system.
+        Function iterates through spatial coordinate bounds to find which bounds
+        encompass the input point. The spatial coordinate associated with these
+        bounds is assigned as the nearest known point.
+        :return: The original cube sub-setted at the this nearest location point
+        """
         lat_point = self.latitude    # define chosen latitude point from input
         lon_point = self.longitude   # define chosen longitude point from input
         self.rename_latitude()
@@ -77,8 +108,25 @@ class PointLocation:
         return self.cube[:, nlat, nlon]
 
 class AreaLocation:
-
+    """
+    Class defined by latitude minimum and maximum limits, longitude minimum and
+    maximum limits and a single cube from the simulations data set constrained
+    only in time.
+    'find_area' finds the nearest neighbouring points of these limits within the
+    cube's spatial coordinates, subsets all relevant data points and
+    produces an area average of the region defined by the limits.
+    """
     def __init__(self, lat_min, lat_max, lon_min, lon_max, cube=iris.cube.Cube):
+        """
+        Initialise the class.
+
+        :param float lat_min: Minimum latitude boundary to constrain points to
+        :param float lat_max: Maximum latitude boundary to constrain points to
+        :param float lon_min: Minimum longitude boundary to constrain points to
+        :param float lon_max: Maximum longitude boundary to constrain points to
+        :param iris.cube.Cube cube: A single cube from one simulation
+        constrained only in time
+        """
         self.latitude_min = lat_min
         self.latitude_max = lat_max
         self.longitude_min = lon_min
@@ -101,12 +149,20 @@ class AreaLocation:
         self.cube = cube
 
     def rename_latitude(self):
+        """
+        Rename the latitude coordinate of the input cube to the unified format
+        required to merge all simulations and perform statistics
+        """
         try:
             self.cube.coord('grid_latitude').rename('latitude')
         except:
             pass
 
     def rename_longitude(self):
+        """
+        Rename the longitude coordinate of the input cube to the unified format
+        required to merge all simulations and perform statistics
+        """
         try:
             self.cube.coord('grid_longitude').rename('longitude')
         except:
@@ -130,8 +186,10 @@ class AreaLocation:
         """
         Finds an area averaged cube based on latitude and longitude min/max
         boundaries. With boundaries defined, the function first finds the
-        nearest known points in the cube's coordinate system and returns an area
-        averaged cube. The new cube's location is defined by the mean position
+        nearest known points for each limit point in the cube's coordinate
+        system. The cube is subset with all points that lie within this bounded
+        region and an area average is performed.
+        The new cube's location is defined by the mean position
         of nearest known points NOT the mean position of the input boundaries.
         """
         min_lat_point = self.latitude_min

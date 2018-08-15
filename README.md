@@ -53,4 +53,4 @@ optional arguments:
 ```
 Output is either a `.nc` file or a plot of the results
 
-More detailed descriptions of the above attributes and operation of the primavera-viewer tool are available in the project Wiki.
+More detailed descriptions of the above arguments and operation of the primavera-viewer tool are available in the project Wiki.

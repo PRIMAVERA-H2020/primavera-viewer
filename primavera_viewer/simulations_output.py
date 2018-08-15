@@ -2,7 +2,7 @@
 simulations_output.py
 =====================
 
-Philip Rutter 13/08/18
+Philip Rutter 15/08/18
 
 Module defines a class 'SimulationsOutput' used to perform requested simulation
 statistics and results output. Results are displayed as a plot or '.nc' file
@@ -20,12 +20,35 @@ class SimulationsOutput:
     """
     Class that contains the data for each simulation in a cube
     simulations list. The mean of these simulations is also included. A
-    plot_type variable is included to described the required plot for the final
-    analysis.
+    stats argument is included to describe the require statistics and the out
+    argument denotes the output type.
+
+    Example:
+    SimulationOutput(sim_list = a_unified_cube,
+                     loc = [30.2, 45.7], # or [30.2, 34.3, 45.7, 48.5] for area
+                     sim_mean = a_single_cube_mean,
+                     stats = 'daily_anomaly_timeseries',
+                     out = 'net_cdf')
     """
 
-    def __init__(self, sim_list=iris.cube.CubeList([]), loc=np.array([]),
+    def __init__(self, sim_list=iris.cube.CubeList([]), loc=([]),
                  sim_mean=iris.cube.Cube([]), stats='', out=''):
+        """
+        Initialise the class.
+
+        :param iris.cube.CubeList sim_list: List of realised simulation cube
+        data unified in structure and formatting and constrained at a time and
+        spatial coords.
+        :param array loc: An array to be used for constraining at location
+        (a two element array for a point or four element array for regional
+        boundaries)
+        :param iris.cube.Cube sim_mean: A single cube with data corresponding to
+        the simulations list mean
+        :param str stats: Statistical operation to be performed on all data. For
+        a detailed description of input options visit the primavera-viewer wiki
+        on GitHub at: https://github.com/PRIMAVERA-H2020/primavera-viewer/wiki
+        :param str out: Output required. (visit above wiki to see options)
+        """
         self.simulations_list = sim_list
         self.location = loc
         self.simulations_mean = sim_mean
@@ -34,8 +57,8 @@ class SimulationsOutput:
 
     def annual_mean_timeseries(self, params, output):
         """
-        Simulations data are aggregated by year and plotted as a timeseries for
-        the requested period. Includes the simulations mean timeseries.
+        Simulations data are aggregated by year and plotted as a time series for
+        the requested period. Includes the simulations mean time series.
         """
         cube = params.get()
         annual_mean = stats.annual_mean(cube)
@@ -43,8 +66,8 @@ class SimulationsOutput:
 
     def monthly_mean_timeseries(self, params, output):
         """
-        Simulations data are aggregated by month and plotted as a timeseries for
-        the requested period. Includes the simulations mean timeseries.
+        Simulations data are aggregated by month and plotted as a time series
+        for the requested period. Includes the simulations mean time series.
         """
         cube = params.get()
         monthly_analysis_cubes = stats.monthly_analysis(cube)
@@ -52,7 +75,7 @@ class SimulationsOutput:
 
     def daily_anomaly_timeseries(self, params, output):
         """
-        Calculates the anomaly timeseries for each simulation based on daily
+        Calculates the anomaly time series for each simulation based on daily
         data. The anomaly is taken with respect to the mean from each month over
         all years for the constrained time period.
         """
@@ -62,7 +85,7 @@ class SimulationsOutput:
 
     def monthly_mean_anomaly_timeseries(self, params, output):
         """
-        Calculates the anomaly timeseries for each simulation aggregated by
+        Calculates the anomaly time series for each simulation aggregated by
         month. The anomaly is taken with respect to the mean from each month
         over all years for the constrained time period.
         """
@@ -72,7 +95,7 @@ class SimulationsOutput:
 
     def monthly_maximum_anomaly_timeseries(self, params, output):
         """
-        Calculates the anomaly timeseries for each simulation aggregated by
+        Calculates the anomaly time series for each simulation aggregated by
         month. The anomaly is taken with respect to the mean from each month
         over all years for the constrained time period.
         """
@@ -172,6 +195,10 @@ class SimulationsOutput:
         return cube_list
 
     def simulations_result(self):
+        """
+        Handles the output of the primevera-viewer tool, either a plot or a
+        '.nc' file
+        """
 
         result_cubes = self.simulations_statistics()
         # Optional .nc file output

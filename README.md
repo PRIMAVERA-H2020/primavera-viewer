@@ -3,13 +3,13 @@ A tool used for comparing multi-model, multi-resolution PRIMAVERA datasets.
 
 Variable, model and ensemble member inputs are specfied on the command line along with constraints on location and time. 
 
-Classes and modules within the primavera-viewer package unify datasets (formatting, data types and dimension structures) allowing statistical analysis to be performed. Outputs are specified as a '.nc' file or a plot.
+Classes and modules within the primavera-viewer package unify datasets (formatting, data types and dimension structures) allowing statistical analysis to be performed. Outputs are specified as a netCDF file or a plot.
 
 ### Operation steps:
 * STEP 1: Export a python3 conda environment
 * STEP 2: Add cloned repository to `PYTHONPATH`
 * STEP 3: Specify data files to read in using .json configuration files
-* STEP 3: Operate tool from command line with 
+* STEP 4: Operate tool from command line with 
 ```
 usage: PRIMAVERA_comparison.py [-h] [-var VARIABLE [VARIABLE ...]]
                                [-mod MODELS [MODELS ...]]

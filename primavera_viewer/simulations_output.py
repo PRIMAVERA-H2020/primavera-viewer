@@ -34,7 +34,7 @@ class SimulationsOutput:
     """
 
     def __init__(self, sim_list=iris.cube.CubeList([]), loc=([]),
-                 sim_mean=iris.cube.Cube([]), stats='', out=''):
+                 sim_mean=iris.cube.Cube([]), stats='', out='', filename=None):
         """
         Initialise the class.
 
@@ -50,12 +50,17 @@ class SimulationsOutput:
         a detailed description of input options visit the primavera-viewer wiki
         on GitHub at: https://github.com/PRIMAVERA-H2020/primavera-viewer/wiki
         :param str out: Output required. (visit above wiki to see options)
+        :param str filename: Optional, filename to save the output files as.
         """
         self.simulations_list = sim_list
         self.location = loc
         self.simulations_mean = sim_mean
         self.statistics = stats
         self.output = out
+        if filename:
+            self.filename = filename
+        else:
+            self.filename = 'primavera_comparison'
 
     def annual_mean_timeseries(self, params, output):
         """
@@ -203,20 +208,33 @@ class SimulationsOutput:
         """
 
         result_cubes = self.simulations_statistics()
+
+        if len(self.location) == 2:
+            plot_title = (result_cubes[0].long_name + '\nat Lat: '
+                          + str(self.location[0]) + 'N  Lon: '
+                          + str(self.location[1]) + 'E')
+        if len(self.location) == 4:
+            plot_title = (result_cubes[0].long_name + '\n over Lat range: '
+                          + str(self.location[0]) + 'N to '
+                          + str(self.location[1]) + 'N Longitude range: '
+                          + str(self.location[2]) + 'E to '
+                          + str(self.location[3]) + 'E')
+
         # Optional .nc file output
-        if self.output == 'netCDF':
+        if self.output in ['netCDF', 'both']:
             # output save file to directory
-            iris.save(result_cubes, 'primavera_comparison.nc',
+            for cube in result_cubes:
+                cube.attributes['plot_title'] = plot_title
+            iris.save(result_cubes, self.filename + '.nc',
                       netcdf_format="NETCDF3_CLASSIC")
-            return result_cubes
         # Optional plot output
-        if self.output == 'plot':
+        if self.output in ['plot', 'both']:
+            fig = plt.figure()
             # Plot the primavera comparison results
             colours = ['r','b','#1f77b4', '#ff7f0e',
                        '#2ca02c', '#d62728', 'c', 'm']
             for i, cube in enumerate(result_cubes):
                 cube_label = cube.coord('simulation_label').points[0]
-                cube_name = cube.long_name
                 if cube_label == 'Simulations Mean':
                     qplt.plot(cube, label=cube_label,
                               color=self.lighten_color('k', 1.0),
@@ -227,16 +245,7 @@ class SimulationsOutput:
                               linewidth=1.0)
             # Change final plot details
             plt.legend()
-            if len(self.location) == 2:
-                plt.title(cube_name+'\n'
-                          'at Lat: '+str(self.location[0])+'N '
-                          'Lon: '+str(self.location[1])+'E')
-            if len(self.location) == 4:
-                plt.title(cube_name+'\n'
-                          'over Lat range: '+str(self.location[0])+'N '
-                          'to '+str(self.location[1])+'N '
-                          'Longitude range: '+str(self.location[2])+'E '
-                          'to '+str(self.location[3])+'E')
+            plt.title(plot_title)
             plt.grid(True)
-            return plt.show()
+            fig.savefig(self.filename + '.png')
 

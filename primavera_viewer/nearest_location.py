@@ -88,23 +88,51 @@ class PointLocation:
         self.rename_longitude()
         all_lat_bounds = self.cube.coord('latitude').bounds
         all_lon_bounds = self.cube.coord('longitude').bounds
-        # Iterate through each 2D array of the lower and upper bounds
-        for i, lat_bounds in enumerate(all_lat_bounds):
-            for j, lon_bounds in enumerate(all_lon_bounds):
-                # Point must be smaller than max upper bound
-                if lat_bounds[0] <= lat_point < lat_bounds[1]:
-                    if lon_bounds[0] <= lon_point < lon_bounds[1]:
-                        nlat = i
-                        nlon = j
+
+        if ((all_lat_bounds[1, 0] > all_lat_bounds[0, 0]) and
+                (all_lon_bounds[1, 0] > all_lon_bounds[0, 0])):
+            # monotonically increasing
+            # Iterate through each 2D array of the lower and upper bounds
+            for i, lat_bounds in enumerate(all_lat_bounds):
+                for j, lon_bounds in enumerate(all_lon_bounds):
+                    # Point must be smaller than max upper bound
+                    if lat_bounds[0] <= lat_point < lat_bounds[1]:
+                        if lon_bounds[0] <= lon_point < lon_bounds[1]:
+                            nlat = i
+                            nlon = j
+                        else:
+                            pass
                     else:
                         pass
-                else:
-                    pass
-                # Additional statements allowing points to match max upper bound
-                if lat_point == all_lat_bounds[-1][1]:
-                    nlat = i
-                if lon_point == all_lon_bounds[-1][1]:
-                    nlon = j
+                    # Additional statements allowing points to match max upper bound
+                    if lat_point == all_lat_bounds[-1][1]:
+                        nlat = i
+                    if lon_point == all_lon_bounds[-1][1]:
+                        nlon = j
+        elif ((all_lat_bounds[1, 0] < all_lat_bounds[0, 0]) and
+                (all_lon_bounds[1, 0] > all_lon_bounds[0, 0])):
+            # monotonically decreasing lat and increasing lon
+            # Iterate through each 2D array of the lower and upper bounds
+            for i, lat_bounds in enumerate(all_lat_bounds):
+                for j, lon_bounds in enumerate(all_lon_bounds):
+                    # Point must be smaller than max upper bound
+                    if lat_bounds[0] >= lat_point > lat_bounds[1]:
+                        if lon_bounds[0] <= lon_point < lon_bounds[1]:
+                            nlat = i
+                            nlon = j
+                        else:
+                            pass
+                    else:
+                        pass
+                    # Additional statements allowing points to match max upper bound
+                    if lat_point == all_lat_bounds[-1][1]:
+                        nlat = i
+                    if lon_point == all_lon_bounds[-1][1]:
+                        nlon = j
+        else:
+            raise NotImplementedError('Direction of latitude and longitude '
+                                      'has not been implemented yet.')
+
         return self.cube[:, nlat, nlon]
 
 class AreaLocation:

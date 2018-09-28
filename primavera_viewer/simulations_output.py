@@ -203,20 +203,33 @@ class SimulationsOutput:
         """
 
         result_cubes = self.simulations_statistics()
+
+        if len(self.location) == 2:
+            plot_title = (result_cubes[0].long_name + '\nat Lat: '
+                          + str(self.location[0]) + 'N  Lon: '
+                          + str(self.location[1]) + 'E')
+        if len(self.location) == 4:
+            plot_title = (result_cubes[0].long_name + '\n over Lat range: '
+                          + str(self.location[0]) + 'N to '
+                          + str(self.location[1]) + 'N Longitude range: '
+                          + str(self.location[2]) + 'E to '
+                          + str(self.location[3]) + 'E')
+
         # Optional .nc file output
         if self.output == 'netCDF':
             # output save file to directory
+            for cube in result_cubes:
+                cube.attributes['plot_title'] = plot_title
             iris.save(result_cubes, 'primavera_comparison.nc',
                       netcdf_format="NETCDF3_CLASSIC")
             return result_cubes
         # Optional plot output
-        if self.output == 'plot':
+        elif self.output == 'plot':
             # Plot the primavera comparison results
             colours = ['r','b','#1f77b4', '#ff7f0e',
                        '#2ca02c', '#d62728', 'c', 'm']
             for i, cube in enumerate(result_cubes):
                 cube_label = cube.coord('simulation_label').points[0]
-                cube_name = cube.long_name
                 if cube_label == 'Simulations Mean':
                     qplt.plot(cube, label=cube_label,
                               color=self.lighten_color('k', 1.0),
@@ -227,16 +240,7 @@ class SimulationsOutput:
                               linewidth=1.0)
             # Change final plot details
             plt.legend()
-            if len(self.location) == 2:
-                plt.title(cube_name+'\n'
-                          'at Lat: '+str(self.location[0])+'N '
-                          'Lon: '+str(self.location[1])+'E')
-            if len(self.location) == 4:
-                plt.title(cube_name+'\n'
-                          'over Lat range: '+str(self.location[0])+'N '
-                          'to '+str(self.location[1])+'N '
-                          'Longitude range: '+str(self.location[2])+'E '
-                          'to '+str(self.location[3])+'E')
+            plt.title(plot_title)
             plt.grid(True)
             return plt.show()
 

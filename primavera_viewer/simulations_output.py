@@ -224,9 +224,8 @@ class SimulationsOutput:
                 cube.attributes['plot_title'] = plot_title
             iris.save(result_cubes, 'primavera_comparison.nc',
                       netcdf_format="NETCDF3_CLASSIC")
-            return result_cubes
         # Optional plot output
-        elif self.output in ['plot', 'both']:
+        if self.output in ['plot', 'both']:
             fig = plt.figure()
             # Plot the primavera comparison results
             colours = ['r','b','#1f77b4', '#ff7f0e',

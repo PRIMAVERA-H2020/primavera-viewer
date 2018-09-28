@@ -15,8 +15,6 @@ import itertools
 from primavera_viewer import sim_statistics as stats
 from primavera_viewer import sim_format as format
 import iris.quickplot as qplt
-import matplotlib
-matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import sys
 

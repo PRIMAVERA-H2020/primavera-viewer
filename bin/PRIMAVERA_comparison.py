@@ -28,6 +28,8 @@ comparison.
 type to visualise finalised data for comparison.
 
 """
+import matplotlib
+matplotlib.use('Agg')
 from primavera_viewer.simulations_loading import *
 from primavera_viewer.simulations_data import *
 from primavera_viewer.simulations_output import *

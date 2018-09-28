@@ -50,6 +50,8 @@ def parse_args():
                         help='input statistics for data analysis')
     parser.add_argument('-out', '--output_type',
                         help='type of output required from comparison tool')
+    parser.add_argument('--filename', help='optional prefix for the output '
+                                           'filename')
     parser.add_argument('-styr', '--start_year',
                         help='input start year constraint', type=int)
     parser.add_argument('-enyr', '--end_year',
@@ -149,8 +151,9 @@ def main(args):
     # Create class containing data from all simulations, the simulation mean,
     # the statical analysis requested and output type
     output = SimulationsOutput(simulations_data_unified.simulations_list,
-                                 simulations_data_unified.location,
-                                 simulations_mean, statistics, output_type)
+                               simulations_data_unified.location,
+                               simulations_mean, statistics, output_type,
+                               args.filename)
 
     # Data output as requested
     output.simulations_result()

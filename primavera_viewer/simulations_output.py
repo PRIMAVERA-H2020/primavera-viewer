@@ -36,7 +36,7 @@ class SimulationsOutput:
     """
 
     def __init__(self, sim_list=iris.cube.CubeList([]), loc=([]),
-                 sim_mean=iris.cube.Cube([]), stats='', out=''):
+                 sim_mean=iris.cube.Cube([]), stats='', out='', filename=None):
         """
         Initialise the class.
 
@@ -52,12 +52,17 @@ class SimulationsOutput:
         a detailed description of input options visit the primavera-viewer wiki
         on GitHub at: https://github.com/PRIMAVERA-H2020/primavera-viewer/wiki
         :param str out: Output required. (visit above wiki to see options)
+        :param str filename: Optional, filename to save the output files as.
         """
         self.simulations_list = sim_list
         self.location = loc
         self.simulations_mean = sim_mean
         self.statistics = stats
         self.output = out
+        if filename:
+            self.filename = filename
+        else:
+            self.filename = 'primavera_comparison'
 
     def annual_mean_timeseries(self, params, output):
         """
@@ -222,7 +227,7 @@ class SimulationsOutput:
             # output save file to directory
             for cube in result_cubes:
                 cube.attributes['plot_title'] = plot_title
-            iris.save(result_cubes, 'primavera_comparison.nc',
+            iris.save(result_cubes, self.filename + '.nc',
                       netcdf_format="NETCDF3_CLASSIC")
         # Optional plot output
         if self.output in ['plot', 'both']:
@@ -244,5 +249,5 @@ class SimulationsOutput:
             plt.legend()
             plt.title(plot_title)
             plt.grid(True)
-            fig.savefig('primavera_comparison.png')
+            fig.savefig(self.filename + '.png')
 

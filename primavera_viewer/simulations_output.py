@@ -15,6 +15,8 @@ import itertools
 from primavera_viewer import sim_statistics as stats
 from primavera_viewer import sim_format as format
 import iris.quickplot as qplt
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import sys
 
@@ -225,6 +227,7 @@ class SimulationsOutput:
             return result_cubes
         # Optional plot output
         elif self.output == 'plot':
+            fig = plt.figure()
             # Plot the primavera comparison results
             colours = ['r','b','#1f77b4', '#ff7f0e',
                        '#2ca02c', '#d62728', 'c', 'm']
@@ -242,5 +245,5 @@ class SimulationsOutput:
             plt.legend()
             plt.title(plot_title)
             plt.grid(True)
-            return plt.show()
+            fig.savefig('primavera_comparison.png')
 

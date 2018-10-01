@@ -86,6 +86,11 @@ class PointLocation:
         lon_point = self.longitude   # define chosen longitude point from input
         self.rename_latitude()
         self.rename_longitude()
+        
+        for lat_lon in ['latitude', 'longitude']:
+            if not self.cube.coord(lat_lon).has_bounds():
+                self.cube.coord(lat_lon).guess_bounds()
+
         all_lat_bounds = self.cube.coord('latitude').bounds
         all_lon_bounds = self.cube.coord('longitude').bounds
 

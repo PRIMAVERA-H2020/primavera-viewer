@@ -242,7 +242,8 @@ def set_blank_attributes(cube):
                   'parent_source_id', 'parent_variant_label','grid_label',
                   'source_type', 'run_variant', 'branch_time', 'creation_date',
                   'history', 'tracking_id', 'realm','nco_openmp_thread_number',
-                  'parent_experiment_id']
+                  'parent_experiment_id', 'name', 'EXPID', 'realization_index',
+                  'physics_index', 'forcing_index']
     for attr in attributes:
         cube.attributes[attr] = ''
     return cube

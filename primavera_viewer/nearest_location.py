@@ -75,6 +75,25 @@ class PointLocation:
 
     def find_point(self):
         """
+        Finds the nearest neighbouring point int the specified cube's
+        coordinate system.
+        :return: The original cube sub-setted at the nearest location point
+        """
+
+        dim_coord_names = [dc.name() for dc in self.cube.dim_coords]
+        if 'latitude' in dim_coord_names and 'longitude' in dim_coord_names:
+            print('*** regular {}'.format(self.cube.summary(shorten=True)))
+            return self._find_point_regular_grid()
+        elif ('cell index along first dimension' in dim_coord_names and
+              'cell index along second dimension' in dim_coord_names):
+            print('*** indexed {}'.format(self.cube.summary(shorten=True)))
+            return self._find_point_indexed_grid()
+        else:
+            raise NotImplemented('Not sure how to handle dimension '
+                                 'coordinates {}'.format(dim_coord_names))
+
+    def _find_point_regular_grid(self):
+        """
         Based on the the input latitude/longitude point coordinate, finds the
         nearest neighbouring point int the specified cube's coordinate system.
         Function iterates through spatial coordinate bounds to find which bounds
@@ -139,6 +158,36 @@ class PointLocation:
                                       'has not been implemented yet.')
 
         return self.cube[:, nlat, nlon]
+
+    def _find_point_indexed_grid(self):
+        """
+        Based on the the input index point coordinate, finds the
+        nearest neighbouring point int the specified cube's coordinate system.
+        Function iterates through spatial coordinate bounds to find which bounds
+        encompass the input point. The spatial coordinate associated with these
+        bounds is assigned as the nearest known point.
+        :return: The original cube sub-setted at the this nearest location point
+        """
+        lat_point = self.latitude    # define chosen latitude point from input
+        lon_point = self.longitude   # define chosen longitude point from input
+        lat_coord = self.cube.coord('latitude')
+        lon_coord = self.cube.coord('longitude')
+        for x in self.cube.dim_coords[1].points:
+            for y in self.cube.dim_coords[2].points:
+                try:
+                    lat_test = (lat_coord[x - 1][y - 1].bounds[0, 0] <= lat_point <
+                        lat_coord[x - 1][y - 1].bounds[0, 2])
+                except IndexError:
+                    print('*** x = {} y = {} {}'.format(x, y, self.cube.summary(shorten=True)))
+                    raise
+                lon_test = (lon_coord[x - 1][y - 1].bounds[0, 0] <= lon_point <
+                    lon_coord[x - 1][y - 1].bounds[0, 1])
+                if lat_test and lon_test:
+                    return self.cube[:, x - 1, y - 1]
+
+        raise ValueError('Requested point not found in {}'.format(
+            self.cube.summary(shorten=True)))
+
 
 class AreaLocation:
     """

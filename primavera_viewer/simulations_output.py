@@ -7,16 +7,20 @@ Philip Rutter 15/08/18
 Module defines a class 'SimulationsOutput' used to perform requested simulation
 statistics and results output. Results are displayed as a plot or '.nc' file
 """
+import itertools
+import logging
+import sys
 
 import iris
 import numpy as np
 from multiprocessing import Process, Manager
-import itertools
 from primavera_viewer import sim_statistics as stats
 from primavera_viewer import sim_format as format
 import iris.quickplot as qplt
 import matplotlib.pyplot as plt
-import sys
+
+logger = logging.getLogger(__name__)
+
 
 class SimulationsOutput:
     """
@@ -160,7 +164,7 @@ class SimulationsOutput:
             plot_func = self.monthly_maximum_anomaly_timeseries
             arguments = (params, result_list)
         else:
-            print('ERROR: Specified plotting is not permitted')
+            logger.error('Specified plotting is not permitted')
             sys.exit()
         max_simul_jobs = len(self.simulations_list)
         for i in range(max_simul_jobs):

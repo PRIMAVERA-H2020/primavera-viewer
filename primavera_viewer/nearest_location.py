@@ -11,8 +11,10 @@ finds the nearest known location in the given model and, if latitude and
 longitude bounds are specified, defines the region to be averaged over for
 location analysis.
 """
-
+import logging
 import iris
+
+logger = logging.getLogger(__name__)
 
 class PointLocation:
     """
@@ -81,12 +83,15 @@ class PointLocation:
         """
 
         dim_coord_names = [dc.name() for dc in self.cube.dim_coords]
-        if 'latitude' in dim_coord_names and 'longitude' in dim_coord_names:
-            print('*** regular {}'.format(self.cube.summary(shorten=True)))
+        if (('latitude' in dim_coord_names or
+             'grid_latitude' in dim_coord_names)
+                and ('longitude' in dim_coord_names or
+                'grid_longitude' in dim_coord_names)):
+            logger.debug('*** regular {}'.format(self.cube.summary(shorten=True)))
             return self._find_point_regular_grid()
         elif ('cell index along first dimension' in dim_coord_names and
               'cell index along second dimension' in dim_coord_names):
-            print('*** indexed {}'.format(self.cube.summary(shorten=True)))
+            logger.debug('*** indexed {}'.format(self.cube.summary(shorten=True)))
             return self._find_point_indexed_grid()
         else:
             raise NotImplemented('Not sure how to handle dimension '
@@ -178,7 +183,7 @@ class PointLocation:
                     lat_test = (lat_coord[x - 1][y - 1].bounds[0, 0] <= lat_point <
                         lat_coord[x - 1][y - 1].bounds[0, 2])
                 except IndexError:
-                    print('*** x = {} y = {} {}'.format(x, y, self.cube.summary(shorten=True)))
+                    logger.debug('*** x = {} y = {} {}'.format(x, y, self.cube.summary(shorten=True)))
                     raise
                 lon_test = (lon_coord[x - 1][y - 1].bounds[0, 0] <= lon_point <
                     lon_coord[x - 1][y - 1].bounds[0, 1])

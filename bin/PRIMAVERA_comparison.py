@@ -28,13 +28,20 @@ comparison.
 type to visualise finalised data for comparison.
 
 """
+import argparse
+import logging.config
+import sys
+
 import matplotlib
 matplotlib.use('Agg')
 from primavera_viewer.simulations_loading import *
 from primavera_viewer.simulations_data import *
 from primavera_viewer.simulations_output import *
-import argparse
-import sys
+
+DEFAULT_LOG_LEVEL = logging.WARNING
+DEFAULT_LOG_FORMAT = '%(levelname)s: %(message)s'
+
+logger = logging.getLogger(__name__)
 
 
 def parse_args():
@@ -76,6 +83,8 @@ def parse_args():
     parser.add_argument('-lonmax', '--longitude_max_bound',
                         help='input longitude max bound constraint',
                         type=float)
+    parser.add_argument('-l', '--log-level', help='set logging level to one of '
+        'debug, info, warn (the default), or error')
     args = parser.parse_args()
     return args
 
@@ -89,37 +98,37 @@ def main(args):
     if args.variable:
         variable = args.variable
     else:
-        print('ERROR: Must specify variable input')
+        logger.error('Must specify variable input')
         sys.exit()
 
     if args.models:
         models = args.models
     else:
-        print('ERROR: Must specify models')
+        logger.error('Must specify models')
         sys.exit()
 
     if args.ensembles:
         ensembles = args.ensembles
     else:
-        print('ERROR: Must specify ensemble members')
+        logger.error('Must specify ensemble members')
         sys.exit()
 
     if args.statistics:
         statistics = args.statistics
     else:
-        print('ERROR: Must specify statistics')
+        logger.error('Must specify statistics')
         sys.exit()
 
     if args.output_type:
         output_type = args.output_type
     else:
-        print('ERROR: Must specify output_type')
+        logger.error('Must specify output_type')
         sys.exit()
 
     if args.start_year and args.end_year:
         time_constraints = [args.start_year, args.end_year]
     else:
-        print('ERROR: No time period specified')
+        logger.error('No time period specified')
         sys.exit()
 
     if args.latitude_point and args.latitude_point:
@@ -132,7 +141,7 @@ def main(args):
                                 args.longitude_min_bound,
                                 args.longitude_max_bound]
     else:
-        print('No location specified. Return global average.')
+        logger.warning('No location specified. Return global average.')
         location_constraints = [-90.0, 90.0, 0.0, 360.0]
 
     # Create class containing details of all simulations
@@ -162,6 +171,43 @@ def main(args):
 
 if __name__ == '__main__':
 
-    args = parse_args()
+    cmd_args = parse_args()
+
+    # determine the log level
+    if cmd_args.log_level:
+        try:
+            log_level = getattr(logging, cmd_args.log_level.upper())
+        except AttributeError:
+            logger.setLevel(logging.WARNING)
+            logger.error('log-level must be one of: debug, info, warn or error')
+            sys.exit(1)
+    else:
+        log_level = DEFAULT_LOG_LEVEL
+
+    # configure the logger
+    logging.config.dictConfig({
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'standard': {
+                'format': DEFAULT_LOG_FORMAT,
+            },
+        },
+        'handlers': {
+            'default': {
+                'level': log_level,
+                'class': 'logging.StreamHandler',
+                'formatter': 'standard'
+            },
+        },
+        'loggers': {
+            '': {
+                'handlers': ['default'],
+                'level': log_level,
+                'propagate': True
+            }
+        }
+    })
+
     # Run the code
-    main(args)
+    main(cmd_args)

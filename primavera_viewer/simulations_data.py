@@ -7,12 +7,15 @@ Philip Rutter 14/08/18
 Module defines a class 'SimulationsData' used to manipulating and handling data
 from simulations once fully loaded and concatenated.
 """
+import logging
 from multiprocessing import Process, Manager
 import itertools
 import iris
 import numpy as np
 from primavera_viewer import (nearest_location as loc, sim_format as format)
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 class SimulationsData:
     """
@@ -113,9 +116,10 @@ class SimulationsData:
         if len(self.location) == 2:
             latitude_point = self.location[0]
             longitude_point = self.location[1]
-            print('Constraining location for '
-                  +cube.coord('simulation_label').points[0]+' at point:\n'
-                  +str(latitude_point)+'N '+str(longitude_point)+'E')
+            logger.debug('Constraining location for '
+                         +cube.coord('simulation_label').points[0]+
+                         ' at point:\n'+str(latitude_point)+'N '+
+                         str(longitude_point)+'E')
             cube = loc.PointLocation(latitude_point, longitude_point, cube)
             cube = cube.find_point()
             output.append(cube)
@@ -124,12 +128,11 @@ class SimulationsData:
             latitude_max = self.location[1]
             longitude_min = self.location[2]
             longitude_max = self.location[3]
-            print('Constraining location for '
-                  +cube.coord('simulation_label').points[0]+' over region:\n' 
-                  'Latitude range: '+str(latitude_min)+'N to '
-                  +str(latitude_max)+'N\n'
-                  'Longitude range: '+str(longitude_min)+'E to '
-                  +str(longitude_max)+'E')
+            logger.debug('Constraining location for '+
+                         cube.coord('simulation_label').points[0]+
+                         ' over region:\nLatitude range: '+str(latitude_min)+
+                         'N to '+str(latitude_max)+'N\nLongitude range: '+
+                         str(longitude_min)+'E to '+str(longitude_max)+'E')
             cube = loc.AreaLocation(latitude_min, latitude_max,
                                        longitude_min, longitude_max, cube)
             cube = cube.find_area()
@@ -151,8 +154,8 @@ class SimulationsData:
         :return iris.cube.Cube: Reformatted cube
         """
         cube=params.get()
-        print('Unifying formatting for '
-              +cube.coord('simulation_label').points[0])
+        logger.debug('Unifying formatting for '
+                     +cube.coord('simulation_label').points[0])
         cube = format.change_calendar(cube, time_constr,
                                       new_units='days since 1950-01-01 '
                                                 '00:00:00')
@@ -231,7 +234,8 @@ class SimulationsData:
             simulations_mean.coord(
                 'simulation_label').points[0]='Simulations Mean'
             entime = datetime.now()
-            print('Time ellapsed when calculating mean: '+str(entime-sttime))
+            logger.debug('Time ellapsed when calculating mean: '+
+                         str(entime-sttime))
             return simulations_mean
         else:
             return iris.cube.Cube([])

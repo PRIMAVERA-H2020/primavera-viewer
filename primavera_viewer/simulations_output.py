@@ -184,6 +184,9 @@ class SimulationsOutput:
             cube_list = iris.cube.CubeList([])
             for i in np.arange(0, len(result_list), 1):
                 cubes = result_list[i]
+                for ocube in cubes:
+                    if ocube.data.dtype != np.float32:
+                        ocube.data = ocube.data.astype(np.float32)
                 cube = cubes.merge_cube()
                 cube = format.change_time_points(cube, dy=1, hr=00)
                 cube_list.append(cube)
@@ -191,6 +194,9 @@ class SimulationsOutput:
             cube_list = iris.cube.CubeList([])
             for i in np.arange(0, len(result_list), 1):
                 cubes = result_list[i]
+                for ocube in cubes:
+                    if ocube.data.dtype != np.float32:
+                        ocube.data = ocube.data.astype(np.float32)
                 cube = cubes.merge_cube()
                 cube = format.change_time_points(cube, dy=1, hr=00)
                 cube_list.append(cube)
@@ -198,6 +204,9 @@ class SimulationsOutput:
             cube_list = iris.cube.CubeList([])
             for i in np.arange(0, len(result_list), 1):
                 cubes = result_list[i]
+                for ocube in cubes:
+                    if ocube.data.dtype != np.float32:
+                        ocube.data = ocube.data.astype(np.float32)
                 cube = cubes.merge_cube()
                 cube = format.change_time_points(cube, hr=00)
                 cube_list.append(cube)

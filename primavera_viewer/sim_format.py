@@ -29,7 +29,7 @@ def redefine_spatial_coords(cube):
     """
     simulation_label = cube.coord('simulation_label').points[0]
 
-    if simulation_label == 'EC-Earth3 r1i1p1f1':
+    if 'EC-Earth3' in simulation_label:
         # procedure for handling EC-Earth latitude conversion
         cube.coord('cell index along second dimension').points = cube.coord(
             'latitude').points[:,0]

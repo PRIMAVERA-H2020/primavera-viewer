@@ -147,8 +147,8 @@ class SimulationsLoading:
                         '.highresSST-present.'+simulation[1]+'.day.'\
                         +simulation[2]
         dir = app_config[data_required]['directory']
-        logger.debug('Loading '+simulation[2]+' data for model ensemble '
-                     +simulation[0]+' '+simulation[1])
+        logger.debug('Loading {} data for model ensemble {} {} from {}'.format(
+            simulation[2], simulation[0], simulation[1], dir))
         cubes = iris.load(dir + '/*.nc', constraints)
         cubes_diff_units = iris.cube.CubeList([])
         for cube in cubes:

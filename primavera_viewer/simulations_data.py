@@ -10,6 +10,7 @@ from simulations once fully loaded and concatenated.
 import logging
 from multiprocessing import Process, Manager
 import itertools
+import cf_units
 import iris
 import numpy as np
 from primavera_viewer import (nearest_location as loc, sim_format as format)
@@ -167,6 +168,38 @@ class SimulationsData:
         cube = format.remove_extra_time_coords(cube)# remove non-essential coord
         output.append(cube)
 
+    def mask_bad_data(self, params, output):
+        """
+        If bad points are known to exist in a dataset then these are masked.
+
+        :param iris.cube.Cube params: Cube to reformat
+        :param iris.cube.CubeList output: Cube list to contain reformatted cubes
+        :param np.array t_constr: A two element array for specifying start and
+        end year of data
+        :return iris.cube.Cube: Reformatted cube
+        """
+        cube=params.get()
+
+        simulation_label = cube.coord('simulation_label').points[0]
+
+        if 'CMCC-CM2-VHR4' in simulation_label:
+            dt = datetime(2003, 2, 2, 12, 0, 0)
+            tc = cube.coord('time')
+            numeric_date = cf_units.date2num(dt, tc.units.name,
+                                             tc.units.calendar)
+            time_point_array = np.where(tc.points==numeric_date)[0]
+            if len(time_point_array) == 0:
+                logger.warning('Cannot mask. {} not found in {}'.
+                               format(dt, simulation_label))
+            else:
+                time_point_index = time_point_array[0]
+                cube.data[time_point_index, ...] = np.ma.masked
+                logger.debug('Masking bad data for {} at {}'.
+                             format(simulation_label, dt))
+        else:
+            logger.debug('No data requires masking for {}'.format
+                         (simulation_label))
+        output.append(cube)
 
     def simulations_operations(self):
         """
@@ -176,7 +209,7 @@ class SimulationsData:
         :return self: self.simulations_list refactored as the unified cube list
         """
         operations = ['unifying spatial coords', 'constraining location',
-                      'unifying cube format']
+                      'unifying cube format', 'mask_bad_data']
         for oper in operations:
             jobs = []
             manager = Manager()
@@ -191,6 +224,9 @@ class SimulationsData:
             if oper == 'unifying cube format':
                 func = self.unify_cube_format
                 arguments = (params, result_list, self.time_constraints)
+            if oper == 'mask_bad_data':
+                func = self.mask_bad_data
+                arguments = (params, result_list)
             max_simul_jobs = len(self.simulations_list)
             for i in range(max_simul_jobs):
                 p = Process(target=func, args=arguments)

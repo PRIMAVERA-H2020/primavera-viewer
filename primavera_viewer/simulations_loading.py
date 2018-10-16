@@ -8,6 +8,7 @@ Module for loading and concatenation of data from multiple models and ensembles
 for a given variable.
 
 """
+import logging
 import warnings
 import json
 from multiprocessing import Process, Manager
@@ -17,6 +18,8 @@ from primavera_viewer.sim_format import (add_simulation_label,
                                          change_time_units)
 from datetime import datetime
 import sys
+
+logger = logging.getLogger(__name__)
 
 # Ignore warnings displayed when loading data
 warnings.filterwarnings("ignore")
@@ -79,11 +82,11 @@ class SimulationsLoading:
                         simulation = [model, ensemble, variable]
                         self.simulations_list.append(simulation)
                     except:
-                        print('Directory for '+model+'.'+ensemble+'.'
+                        logger.warning('Directory for '+model+'.'+ensemble+'.'
                               +variable+' does not exist')
                         pass
                     if not self.simulations_list:
-                        print('ERROR: Specifed simulations do not exist')
+                        logger.error('Specifed simulations do not exist')
                         sys.exit()
 
     def set_variable(self, var):
@@ -144,8 +147,8 @@ class SimulationsLoading:
                         '.highresSST-present.'+simulation[1]+'.day.'\
                         +simulation[2]
         dir = app_config[data_required]['directory']
-        print('Loading '+simulation[2]+' data for model ensemble '+simulation[0]
-              +' '+simulation[1])
+        logger.debug('Loading {} data for model ensemble {} {} from {}'.format(
+            simulation[2], simulation[0], simulation[1], dir))
         cubes = iris.load(dir + '/*.nc', constraints)
         cubes_diff_units = iris.cube.CubeList([])
         for cube in cubes:
@@ -168,7 +171,7 @@ class SimulationsLoading:
         data from each simulation
         """
         sttime = datetime.now()
-        print('Starting loading all at: '+str(sttime))
+        logger.debug('Starting loading all at: '+str(sttime))
         max_simul_jobs = len(self.simulations_list)
         jobs = []
         manager = Manager()
@@ -185,5 +188,5 @@ class SimulationsLoading:
                j.join()
         cube_list = iris.cube.CubeList(list(result_list))
         entime = datetime.now()
-        print('Finished loading all at: '+str(entime))
+        logger.debug('Finished loading all at: '+str(entime))
         return cube_list

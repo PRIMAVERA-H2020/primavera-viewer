@@ -7,12 +7,16 @@ Philip Rutter 14/08/18
 Module defines a class 'SimulationsData' used to manipulating and handling data
 from simulations once fully loaded and concatenated.
 """
+import logging
 from multiprocessing import Process, Manager
 import itertools
+import cf_units
 import iris
 import numpy as np
 from primavera_viewer import (nearest_location as loc, sim_format as format)
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 class SimulationsData:
     """
@@ -113,9 +117,10 @@ class SimulationsData:
         if len(self.location) == 2:
             latitude_point = self.location[0]
             longitude_point = self.location[1]
-            print('Constraining location for '
-                  +cube.coord('simulation_label').points[0]+' at point:\n'
-                  +str(latitude_point)+'N '+str(longitude_point)+'E')
+            logger.debug('Constraining location for '
+                         +cube.coord('simulation_label').points[0]+
+                         ' at point:\n'+str(latitude_point)+'N '+
+                         str(longitude_point)+'E')
             cube = loc.PointLocation(latitude_point, longitude_point, cube)
             cube = cube.find_point()
             output.append(cube)
@@ -124,12 +129,11 @@ class SimulationsData:
             latitude_max = self.location[1]
             longitude_min = self.location[2]
             longitude_max = self.location[3]
-            print('Constraining location for '
-                  +cube.coord('simulation_label').points[0]+' over region:\n' 
-                  'Latitude range: '+str(latitude_min)+'N to '
-                  +str(latitude_max)+'N\n'
-                  'Longitude range: '+str(longitude_min)+'E to '
-                  +str(longitude_max)+'E')
+            logger.debug('Constraining location for '+
+                         cube.coord('simulation_label').points[0]+
+                         ' over region:\nLatitude range: '+str(latitude_min)+
+                         'N to '+str(latitude_max)+'N\nLongitude range: '+
+                         str(longitude_min)+'E to '+str(longitude_max)+'E')
             cube = loc.AreaLocation(latitude_min, latitude_max,
                                        longitude_min, longitude_max, cube)
             cube = cube.find_area()
@@ -151,8 +155,8 @@ class SimulationsData:
         :return iris.cube.Cube: Reformatted cube
         """
         cube=params.get()
-        print('Unifying formatting for '
-              +cube.coord('simulation_label').points[0])
+        logger.debug('Unifying formatting for '
+                     +cube.coord('simulation_label').points[0])
         cube = format.change_calendar(cube, time_constr,
                                       new_units='days since 1950-01-01 '
                                                 '00:00:00')
@@ -164,6 +168,38 @@ class SimulationsData:
         cube = format.remove_extra_time_coords(cube)# remove non-essential coord
         output.append(cube)
 
+    def mask_bad_data(self, params, output):
+        """
+        If bad points are known to exist in a dataset then these are masked.
+
+        :param iris.cube.Cube params: Cube to reformat
+        :param iris.cube.CubeList output: Cube list to contain reformatted cubes
+        :param np.array t_constr: A two element array for specifying start and
+        end year of data
+        :return iris.cube.Cube: Reformatted cube
+        """
+        cube=params.get()
+
+        simulation_label = cube.coord('simulation_label').points[0]
+
+        if 'CMCC-CM2-VHR4' in simulation_label:
+            dt = datetime(2003, 2, 2, 12, 0, 0)
+            tc = cube.coord('time')
+            numeric_date = cf_units.date2num(dt, tc.units.name,
+                                             tc.units.calendar)
+            time_point_array = np.where(tc.points==numeric_date)[0]
+            if len(time_point_array) == 0:
+                logger.warning('Cannot mask. {} not found in {}'.
+                               format(dt, simulation_label))
+            else:
+                time_point_index = time_point_array[0]
+                cube.data[time_point_index, ...] = np.ma.masked
+                logger.debug('Masking bad data for {} at {}'.
+                             format(simulation_label, dt))
+        else:
+            logger.debug('No data requires masking for {}'.format
+                         (simulation_label))
+        output.append(cube)
 
     def simulations_operations(self):
         """
@@ -173,7 +209,7 @@ class SimulationsData:
         :return self: self.simulations_list refactored as the unified cube list
         """
         operations = ['unifying spatial coords', 'constraining location',
-                      'unifying cube format']
+                      'unifying cube format', 'mask_bad_data']
         for oper in operations:
             jobs = []
             manager = Manager()
@@ -188,6 +224,9 @@ class SimulationsData:
             if oper == 'unifying cube format':
                 func = self.unify_cube_format
                 arguments = (params, result_list, self.time_constraints)
+            if oper == 'mask_bad_data':
+                func = self.mask_bad_data
+                arguments = (params, result_list)
             max_simul_jobs = len(self.simulations_list)
             for i in range(max_simul_jobs):
                 p = Process(target=func, args=arguments)
@@ -231,7 +270,8 @@ class SimulationsData:
             simulations_mean.coord(
                 'simulation_label').points[0]='Simulations Mean'
             entime = datetime.now()
-            print('Time ellapsed when calculating mean: '+str(entime-sttime))
+            logger.debug('Time ellapsed when calculating mean: '+
+                         str(entime-sttime))
             return simulations_mean
         else:
             return iris.cube.Cube([])

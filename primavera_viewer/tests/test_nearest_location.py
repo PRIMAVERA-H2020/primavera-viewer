@@ -49,7 +49,6 @@ class TestAreaLocation(unittest.TestCase):
                                        cube=self.stock_cube)
         self.lat_coord = self.test_cube.find_area().coord('latitude')
         self.lon_coord = self.test_cube.find_area().coord('longitude')
-        print(self.lat_coord.points[0], self.lon_coord.points[0])
         self.assertEqual([self.lat_coord.points[0], self.lon_coord.points[0]],
                          [-0.5, 2.0])
 
@@ -64,7 +63,6 @@ class TestAreaLocation(unittest.TestCase):
                                        cube=self.stock_cube)
         self.lat_coord = self.test_cube.find_area().coord('latitude')
         self.lon_coord = self.test_cube.find_area().coord('longitude')
-        print(self.lat_coord.points[0], self.lon_coord.points[0])
         self.assertEqual([self.lat_coord.points[0], self.lon_coord.points[0]],
                          [-0.5, 3.0])
 

@@ -11,8 +11,11 @@ finds the nearest known location in the given model and, if latitude and
 longitude bounds are specified, defines the region to be averaged over for
 location analysis.
 """
-
 import iris
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class PointLocation:
     """
@@ -93,6 +96,8 @@ class PointLocation:
 
         all_lat_bounds = self.cube.coord('latitude').bounds
         all_lon_bounds = self.cube.coord('longitude').bounds
+        nlat = None
+        nlon = None
 
         if ((all_lat_bounds[1, 0] > all_lat_bounds[0, 0]) and
                 (all_lon_bounds[1, 0] > all_lon_bounds[0, 0])):
@@ -114,6 +119,15 @@ class PointLocation:
                         nlat = i
                     if lon_point == all_lon_bounds[-1][1]:
                         nlon = j
+            # handle the special case of bounds wrapping 0 degrees longitude
+            if nlon is None:
+                if (all_lon_bounds[0][0] <=
+                        360 - lon_point <
+                        all_lon_bounds[0][1]):
+                    nlon = 0
+                    for i, lat_bounds in enumerate(all_lat_bounds):
+                        if lat_bounds[0] <= lat_point < lat_bounds[1]:
+                            nlat = i
         elif ((all_lat_bounds[1, 0] < all_lat_bounds[0, 0]) and
                 (all_lon_bounds[1, 0] > all_lon_bounds[0, 0])):
             # monotonically decreasing lat and increasing lon
@@ -137,6 +151,13 @@ class PointLocation:
         else:
             raise NotImplementedError('Direction of latitude and longitude '
                                       'has not been implemented yet.')
+
+        if nlat is None or nlon is None:
+            msg = 'Latitude or longitude point not found for {}'.format(
+                self.cube.summary(shorten=True)
+            )
+            logger.error(msg)
+            raise ValueError(msg)
 
         return self.cube[:, nlat, nlon]
 

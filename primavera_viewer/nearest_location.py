@@ -148,6 +148,15 @@ class PointLocation:
                         nlat = i
                     if lon_point == all_lon_bounds[-1][1]:
                         nlon = j
+            # handle the special case of bounds wrapping 0 degrees longitude
+            if nlon is None:
+                if (all_lon_bounds[0][0] <=
+                        360 - lon_point <
+                        all_lon_bounds[0][1]):
+                    nlon = 0
+                    for i, lat_bounds in enumerate(all_lat_bounds):
+                        if lat_bounds[0] >= lat_point > lat_bounds[1]:
+                            nlat = i
         else:
             raise NotImplementedError('Direction of latitude and longitude '
                                       'has not been implemented yet.')

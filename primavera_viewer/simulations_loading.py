@@ -117,7 +117,8 @@ class SimulationsLoading:
         constraints
         :return iris.cube.Cube: A single cube from the concatenated cube list
         """
-        attributes = ['creation_date', 'history', 'tracking_id', 'realm']
+        attributes = ['creation_date', 'history', 'tracking_id', 'realm',
+                      'NCO', 'source']
         for cube in cubes:
             # set attributes likely to disrupt concatenate to a blank string
             cube = change_time_units(cube, 'days since 1950-01-01 00:00:00')
